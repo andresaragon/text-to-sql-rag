@@ -1,0 +1,25 @@
+# --- Core ---
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+python-dotenv==1.0.1
+pydantic==2.9.2
+
+# --- Base de datos ---
+psycopg2-binary==2.9.10  # 2.9.9 no compila en Python 3.14: usa _PyInterpreterState_Get, removida de la API interna de CPython
+pgvector==0.3.4
+SQLAlchemy==2.0.35
+
+# --- LLM local / embeddings ---
+ollama==0.3.3
+sentence-transformers==3.1.1
+
+# --- Validación de SQL generado ---
+sqlglot==25.24.0
+
+# --- Utilidades ---
+numpy==1.26.4
+tenacity==9.0.0
+
+# --- Testing ---
+pytest==8.3.3
+httpx==0.27.2
