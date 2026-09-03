@@ -142,6 +142,13 @@ fallo silencioso documentado, no resuelto.
 - Cómo lo probé / cómo confirmé que funciona:
 - Qué le respondería a un entrevistador:
 
+- **Contexto adicional (caso real de producción):** este mismo patrón
+  de comportamiento — inconsistencia y falta de uso óptimo de índices —
+  lo he visto en un sistema de producción real donde se usó un LLM para
+  afinar queries SQL existentes. Confirma que la limitación que
+  encontré en este proyecto no es una rareza de un modelo chico como
+  sqlcoder corriendo local: es una limitación de categoría, presente
+  incluso cuando el modelo usado es más grande o especializado.
 ---
 
 ## Módulo 5 — `app/core/safety.py`
