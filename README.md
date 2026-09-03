@@ -109,6 +109,71 @@ Por diseño:
 - Hay límite de filas devueltas y timeout de ejecución.
 - Nunca se ejecuta contra una base de datos de producción real.
 
+## Cómo escalaría este proyecto a un esquema de producción real
+
+Este proyecto usa un esquema de 4 tablas a propósito, para poder validar
+cada decisión de diseño de punta a punta sin la complejidad de una base
+real. Escalar a un esquema de empresa mediana/grande (decenas o cientos
+de tablas) requeriría cambios concretos en dos frentes distintos:
+
+### 1. Índices para que el SQL generado corra rápido
+
+Con tablas de millones de filas, `statement_timeout` deja de ser
+suficiente — mata queries lentas, pero no las hace rápidas. Haría falta:
+
+- Índices explícitos en cada columna FK (Postgres no los crea
+  automáticamente, a diferencia de las PK) — es la optimización más
+  básica y más fácil de pasar por alto.
+- Índices compuestos sobre los patrones de filtro reales que aparezcan
+  en producción (por ejemplo, `(status, due_date)` en `invoices`, dado
+  que varias de mis preguntas de prueba filtraban por ambas columnas a
+  la vez).
+- Estos patrones no se pueden adivinar de antemano — requieren
+  loggear el SQL generado en producción y analizar qué se ejecuta
+  realmente antes de decidir qué indexar.
+
+### 2. Usar las foreign keys para mejorar el retrieval, no solo la ejecución
+
+En este proyecto, `retrieval.py` busca cada tabla de forma
+independiente por similitud semántica — funciona con 4 tablas porque
+el LLM puede inferir los JOINs correctos solo por los nombres de
+columna. A mayor escala esto se rompe: dos tablas relevantes pueden
+aparecer en el contexto sin ninguna pista de cómo conectarlas.
+
+La mejora sería un retrieval híbrido (semántico + estructural):
+
+1. El retrieval semántico actual encuentra la tabla más relevante a
+   la pregunta.
+2. Antes de armar el contexto, se consulta el catálogo de Postgres
+   (`information_schema.key_column_usage`) para encontrar qué tablas
+   están conectadas por FK a esa tabla.
+3. Esas tablas conectadas se agregan al contexto aunque su similitud
+   semántica con la pregunta sea baja — la razón de incluirlas no es
+   "se parecen a la pregunta", es "son alcanzables por JOIN".
+4. El camino de JOIN explícito (`invoices.customer_id →
+   customers.customer_id`) se pasa al LLM en el prompt, no solo las
+   descripciones sueltas — reduce la alucinación de JOINs incorrectos.
+
+### Por qué esto no es solo teoría
+
+En un sistema de producción con el que tuve contacto, se le pidió a un
+LLM afinar un conjunto de queries SQL ya existentes. El resultado fue
+inconsistente: la mayoría de las veces devolvía resultados distintos
+a los originales al "afinar" la query, y en varios casos no utilizaba
+los índices más adecuados disponibles. Esto es consistente con lo que
+encontré en este proyecto (`sql_generator.py`): un LLM puede generar
+SQL sintácticamente válido y con apariencia razonable, sin que eso
+garantice que sea semánticamente equivalente a la intención original
+ni óptimo en su plan de ejecución — porque el modelo no tiene
+visibilidad real del planificador de queries ni del estado de los
+índices, solo genera texto plausible basado en patrones de
+entrenamiento.
+
+La mitigación real en un caso así no es "confiar más" en el LLM, sino
+tratarlo como una fuente de sugerencias que se valida siempre contra
+`EXPLAIN ANALYZE` y contra los resultados de la query original —
+nunca como una fuente de verdad por sí sola.
+
 ## Notas de implementación
 
 Ver [`NOTES.md`](./NOTES.md) — diario técnico con las decisiones tomadas
