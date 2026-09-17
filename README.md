@@ -23,13 +23,13 @@ es un ejemplo end-to-end de ese problema, resuelto con herramientas propias:
 
 ## Estado del proyecto
 
-🚧 En construcción — desarrollo personal, no producción.
+✅ Implementado y validado end-to-end — desarrollo personal, no producción.
 
-- [ ] Fase 1 — Base de datos de práctica (dominio: facturación/cobranza)
-- [ ] Fase 2 — Indexado del esquema (embeddings + pgvector)
-- [ ] Fase 3 — Generación de SQL con Ollama
-- [ ] Fase 4 — Capa de validación y seguridad
-- [ ] Fase 5 — API mínima (FastAPI) / CLI
+- [x] Fase 1 — Base de datos de práctica (dominio: facturación/cobranza)
+- [x] Fase 2 — Indexado del esquema (embeddings + pgvector)
+- [x] Fase 3 — Generación de SQL con Ollama
+- [x] Fase 4 — Capa de validación y seguridad
+- [x] Fase 5 — API mínima (FastAPI) / CLI
 
 ## Stack
 
