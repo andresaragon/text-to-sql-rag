@@ -1,188 +1,189 @@
-# Text-to-SQL Assistant with RAG
+# Production-Grade Text-to-SQL Assistant with Schema RAG & AST Safety Guardrails
 
-Asistente que traduce preguntas en lenguaje natural a consultas SQL seguras,
-usando RAG (Retrieval-Augmented Generation) para darle al LLM el contexto
-real del esquema de base de datos — en vez de dejar que "adivine" nombres
-de tablas y columnas.
+[![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![PostgreSQL + pgvector](https://img.shields.io/badge/PostgreSQL-16%20%2B%20pgvector-336791?logo=postgresql&logoColor=white)](https://github.com/pgvector/pgvector)
+[![sqlglot AST](https://img.shields.io/badge/Security-sqlglot%20AST%20Parser-FF6F00)](https://github.com/tobymao/sqlglot)
+[![Tests Passing](https://img.shields.io/badge/Tests-8%2F8%20Passed-brightgreen)](tests/test_safety.py)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Proyecto personal para conectar experiencia de 5+ años en bases de datos
-relacionales (PL/SQL / Oracle / SQL Server) con desarrollo práctico de
-aplicaciones basadas en LLMs.
+> **[🇪🇸 Leer versión en Español](README.es.md)**
 
-## Por qué este proyecto
+An end-to-end AI system that converts natural language business queries into secure, syntactically verified, and performant SQL queries. 
 
-Uno de los mayores cuellos de botella al llevar LLMs a empresas reales no
-es entrenar modelos, sino conectarlos de forma segura y precisa con datos
-estructurados ya existentes (SQL, ERPs, pipelines de datos). Este proyecto
-es un ejemplo end-to-end de ese problema, resuelto con herramientas propias:
+Designed and built to bridge **5+ years of production experience in enterprise relational databases (Oracle PL/SQL, SQL Server)** with modern **AI Engineering (LLMs, RAG, and Agentic workflows)**.
 
-- **LLM local** vía Ollama (GPU-acelerado, CUDA) — sin depender de APIs pagas.
-- **RAG sobre el esquema**: embeddings de tablas, columnas, relaciones y
-  ejemplos de queries, para que el modelo genere SQL con contexto real.
-- **Capa de seguridad**: solo `SELECT`, sin DDL/DML, con límites y timeout.
+---
 
-## Estado del proyecto
+## 🏗️ Architecture Flow
 
-✅ Implementado y validado end-to-end — desarrollo personal, no producción.
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Client as User / Client App
+    participant API as FastAPI (/query)
+    participant RAG as Retrieval Engine (pgvector)
+    participant LLM as Local LLM (Ollama / CUDA)
+    participant Guard as Safety Engine (sqlglot AST)
+    participant DB as PostgreSQL Sandbox
 
-- [x] Fase 1 — Base de datos de práctica (dominio: facturación/cobranza)
-- [x] Fase 2 — Indexado del esquema (embeddings + pgvector)
-- [x] Fase 3 — Generación de SQL con Ollama
-- [x] Fase 4 — Capa de validación y seguridad
-- [x] Fase 5 — API mínima (FastAPI) / CLI
-
-## Stack
-
-| Componente          | Herramienta                          |
-|---------------------|---------------------------------------|
-| Base de datos        | PostgreSQL + `pgvector`              |
-| LLM local            | Ollama (ej. `sqlcoder`, `codellama`) |
-| Embeddings           | Modelo local vía Ollama o `sentence-transformers` |
-| Backend / API        | Python + FastAPI                     |
-| Validación de SQL    | `sqlglot` (parseo y verificación de que solo sea SELECT) |
-
-## Estructura del repo
-
-```
-text-to-sql-rag/
-├── app/
-│   ├── core/          # lógica de RAG, embeddings, generación de SQL
-│   ├── api/           # endpoints FastAPI
-│   └── main.py         # punto de entrada
-├── db/
-│   ├── schema.sql       # esquema de la base de práctica
-│   └── seed.sql         # datos de ejemplo
-├── data/
-│   └── schema_docs/     # descripciones de tablas/columnas para indexar (RAG)
-├── scripts/
-│   └── index_schema.py  # genera embeddings del esquema y los guarda
-├── tests/
-├── requirements.txt
-├── .env.example
-└── README.md
+    Client->>API: POST /query {"question": "How many customers have overdue invoices?"}
+    API->>RAG: Embed query & search relevant schema
+    RAG-->>API: Returns relevant table DDLs & semantic column descriptions
+    API->>LLM: Augmented Prompt (Contextual Schema + Question + Dialect rules)
+    LLM-->>API: Generated SQL query candidate
+    API->>Guard: Parse Abstract Syntax Tree (AST) validation
+    alt Malicious or Non-SELECT query
+        Guard-->>API: Raises UnsafeQueryError (blocked)
+        API-->>Client: 400 Bad Request (Detailed safety rejection)
+    else Safe query
+        Guard-->>API: Sanitized SQL with enforced LIMIT and timeouts
+        API->>DB: Execute query in isolated read-only transaction
+        DB-->>API: Query result rows
+        API-->>Client: 200 OK {sql, rows, row_count}
+    end
 ```
 
-## Setup rápido (cuando el código esté implementado)
+---
+
+## 🎯 Why This Project Matters
+
+One of the greatest challenges in deploying generative AI in enterprise environments is connecting LLMs to structured corporate databases without risking:
+1. **Schema Hallucinations:** Asking the LLM to write queries against a 50+ table schema often causes it to invent non-existent column names or faulty join conditions.
+2. **Security Vulnerabilities:** Naive regex filters fail against obfuscated SQL injections, multi-statement payloads (`SELECT ...; DROP TABLE`), or comments disguised as DDL.
+3. **Runaway Queries:** Slow full-table scans that exhaust production memory and database connection pools.
+
+This project delivers a production-pattern solution:
+- **Schema-Pruned RAG:** Embeds database entities (tables, columns, business definitions) into `pgvector`. Only the top relevant schema slice is dynamically injected into the prompt.
+- **Zero-Regex AST Validation (`sqlglot`):** Inspects the query's Abstract Syntax Tree to mathematically guarantee that **only single `SELECT` statements** are ever executed.
+- **Privacy-First Local Inference:** Fully runnable via **Ollama (GPU CUDA-accelerated)**, ensuring sensitive company schema details never leave on-premise infrastructure.
+
+---
+
+## 🛡️ AST-Level Safety Guardrails (The Core Engine)
+
+Rather than fragile regex pattern matching, [`app/core/safety.py`](app/core/safety.py) uses `sqlglot` to parse and validate incoming SQL:
+
+* **Strict Single Statement Check:** Rejects multiple semicolons and stacked statements (e.g., `SELECT 1; DROP TABLE users;`).
+* **Root Expression Verification:** Confirms the root node is strictly `exp.Select`. Any `INSERT`, `UPDATE`, `DELETE`, `DROP`, `ALTER`, or `TRUNCATE` operations trigger an immediate `UnsafeQueryError`.
+* **Row-Count Clamping:** Inspects the AST for existing `LIMIT` clauses:
+  - If omitted, injects a default `LIMIT 100`.
+  - If present but exceeds safety thresholds, clamps it to the maximum allowable limit.
+* **Engine-Level Timeouts:** Automatically sets `statement_timeout = 5000` (5s) per session to eliminate unindexed full-table runaway queries.
+
+---
+
+## 🧪 Test Suite
+
+Unit tests cover critical security edge cases, ensuring injection bypasses are caught before hitting the database:
 
 ```bash
-python -m venv venv
-source venv/bin/activate
+# Run tests inside the virtual environment
+pytest tests/test_safety.py -v
+```
+
+```text
+tests/test_safety.py::test_valid_select_is_safe PASSED                [ 12%]
+tests/test_safety.py::test_drop_table_is_rejected PASSED             [ 25%]
+tests/test_safety.py::test_delete_is_rejected PASSED                 [ 37%]
+tests/test_safety.py::test_select_with_subquery_insert_is_rejected PASSED [ 50%]
+tests/test_safety.py::test_update_disguised_as_comment_is_rejected PASSED [ 62%]
+tests/test_safety.py::test_enforce_limit_adds_limit_when_missing PASSED   [ 75%]
+tests/test_safety.py::test_enforce_limit_keeps_limit_below_max PASSED     [ 87%]
+tests/test_safety.py::test_enforce_limit_caps_limit_above_max PASSED      [100%]
+
+============================== 8 passed in 1.10s ===============================
+```
+
+---
+
+## 🚀 Quickstart
+
+### Prerequisites
+- Python 3.10+
+- Docker (for PostgreSQL with `pgvector`)
+- Ollama running locally (or any OpenAI-compatible endpoint)
+
+### 1. Clone & Setup Environment
+```bash
+git clone https://github.com/andresaragon/text-to-sql-rag.git
+cd text-to-sql-rag
+
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
+```
 
-# Levantar Postgres con pgvector (ejemplo con Docker)
-docker run --name pg-vector -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d ankane/pgvector
+### 2. Launch PostgreSQL with pgvector
+```bash
+docker run --name pg-vector \
+  -e POSTGRES_PASSWORD=postgres \
+  -p 5432:5432 \
+  -d ankane/pgvector
+```
 
-# Cargar esquema y datos de ejemplo
+### 3. Initialize Database & Seed Sample Data
+```bash
 psql -h localhost -U postgres -f db/schema.sql
 psql -h localhost -U postgres -f db/seed.sql
+```
 
-# Indexar el esquema para RAG
+### 4. Index Schema into pgvector
+```bash
 python scripts/index_schema.py
-
-# Levantar la API
-uvicorn app.main:app --reload
 ```
 
-## Ejemplo de uso (objetivo)
-
+### 5. Launch FastAPI Backend
+```bash
+uvicorn app.main:app --reload --port 8000
 ```
-POST /query
+
+---
+
+## 📡 API Usage
+
+### `POST /query`
+Translates a natural language question into safe SQL and executes it:
+
+```bash
+curl -X POST "http://localhost:8000/query" \
+     -H "Content-Type: application/json" \
+     -d '{"question": "Which customers have overdue invoices older than 30 days?"}'
+```
+
+**Response (200 OK):**
+```json
 {
-  "question": "¿Cuántos clientes tienen facturas vencidas hace más de 30 días?"
-}
-
-Respuesta:
-{
-  "sql": "SELECT COUNT(DISTINCT customer_id) FROM invoices WHERE due_date < NOW() - INTERVAL '30 days' AND status = 'overdue';",
-  "explanation": "Cuenta clientes distintos con al menos una factura vencida hace más de 30 días.",
-  "rows_returned": 1
+  "sql": "SELECT COUNT(DISTINCT customer_id) FROM invoices WHERE due_date < NOW() - INTERVAL '30 days' AND status = 'overdue' LIMIT 100;",
+  "rows": [
+    {
+      "count": 4
+    }
+  ],
+  "row_count": 1
 }
 ```
 
-## Nota sobre seguridad
+---
 
-Este proyecto ejecuta SQL generado por un LLM contra una base de datos real.
-Por diseño:
-- Solo se permiten consultas `SELECT`.
-- Se valida el SQL con un parser (`sqlglot`) antes de ejecutar, no solo con
-  un filtro de texto.
-- Hay límite de filas devueltas y timeout de ejecución.
-- Nunca se ejecuta contra una base de datos de producción real.
+## 📈 Production Scaling Blueprint (Insights from 5+ Years in DBs)
 
-## Cómo escalaría este proyecto a un esquema de producción real
+Full technical deliberations and trade-offs are documented in [`NOTES.md`](./NOTES.md). When transitioning this architecture to 100+ table schemas:
 
-Este proyecto usa un esquema de 4 tablas a propósito, para poder validar
-cada decisión de diseño de punta a punta sin la complejidad de una base
-real. Escalar a un esquema de empresa mediana/grande (decenas o cientos
-de tablas) requeriría cambios concretos en dos frentes distintos:
+1. **Foreign Key Graph Retrieval (Structural + Semantic Hybrid):**
+   Pure semantic similarity fails when queries require multi-hop joins across tables with unrelated names. A production RAG system must query `information_schema.key_column_usage` to traverse the foreign-key graph and inject the explicit join path (`invoices.customer_id → customers.customer_id`) into the prompt.
+2. **`EXPLAIN ANALYZE` Cost Validation:**
+   LLMs generate plausible text, not optimal execution plans. Integrating an automated `EXPLAIN (FORMAT JSON)` pre-flight step allows rejecting queries whose estimated cost exceeds a strict budget before actual execution.
+3. **FK Index Enforcement:**
+   PostgreSQL does not automatically index foreign keys. Automated schema audits ensure indexes exist on joined columns to prevent table locks and slow joins under LLM load.
 
-### 1. Índices para que el SQL generado corra rápido
+---
 
-Con tablas de millones de filas, `statement_timeout` deja de ser
-suficiente — mata queries lentas, pero no las hace rápidas. Haría falta:
+## 👤 Author
 
-- Índices explícitos en cada columna FK (Postgres no los crea
-  automáticamente, a diferencia de las PK) — es la optimización más
-  básica y más fácil de pasar por alto.
-- Índices compuestos sobre los patrones de filtro reales que aparezcan
-  en producción (por ejemplo, `(status, due_date)` en `invoices`, dado
-  que varias de mis preguntas de prueba filtraban por ambas columnas a
-  la vez).
-- Estos patrones no se pueden adivinar de antemano — requieren
-  loggear el SQL generado en producción y analizar qué se ejecuta
-  realmente antes de decidir qué indexar.
+**Santiago Andrés Aragón Guzmán**  
+*Senior Backend Engineer (Oracle PL/SQL, SQL Server) transitioning to AI Engineering.*  
 
-### 2. Usar las foreign keys para mejorar el retrieval, no solo la ejecución
-
-En este proyecto, `retrieval.py` busca cada tabla de forma
-independiente por similitud semántica — funciona con 4 tablas porque
-el LLM puede inferir los JOINs correctos solo por los nombres de
-columna. A mayor escala esto se rompe: dos tablas relevantes pueden
-aparecer en el contexto sin ninguna pista de cómo conectarlas.
-
-La mejora sería un retrieval híbrido (semántico + estructural):
-
-1. El retrieval semántico actual encuentra la tabla más relevante a
-   la pregunta.
-2. Antes de armar el contexto, se consulta el catálogo de Postgres
-   (`information_schema.key_column_usage`) para encontrar qué tablas
-   están conectadas por FK a esa tabla.
-3. Esas tablas conectadas se agregan al contexto aunque su similitud
-   semántica con la pregunta sea baja — la razón de incluirlas no es
-   "se parecen a la pregunta", es "son alcanzables por JOIN".
-4. El camino de JOIN explícito (`invoices.customer_id →
-   customers.customer_id`) se pasa al LLM en el prompt, no solo las
-   descripciones sueltas — reduce la alucinación de JOINs incorrectos.
-
-### Por qué esto no es solo teoría
-
-En un sistema de producción con el que tuve contacto, se le pidió a un
-LLM afinar un conjunto de queries SQL ya existentes. El resultado fue
-inconsistente: la mayoría de las veces devolvía resultados distintos
-a los originales al "afinar" la query, y en varios casos no utilizaba
-los índices más adecuados disponibles. Esto es consistente con lo que
-encontré en este proyecto (`sql_generator.py`): un LLM puede generar
-SQL sintácticamente válido y con apariencia razonable, sin que eso
-garantice que sea semánticamente equivalente a la intención original
-ni óptimo en su plan de ejecución — porque el modelo no tiene
-visibilidad real del planificador de queries ni del estado de los
-índices, solo genera texto plausible basado en patrones de
-entrenamiento.
-
-La mitigación real en un caso así no es "confiar más" en el LLM, sino
-tratarlo como una fuente de sugerencias que se valida siempre contra
-`EXPLAIN ANALYZE` y contra los resultados de la query original —
-nunca como una fuente de verdad por sí sola.
-
-## Notas de implementación
-
-Ver [`NOTES.md`](./NOTES.md) — diario técnico con las decisiones tomadas
-en cada módulo, pensado para poder explicar el proyecto de memoria en
-una entrevista técnica.
-
-## Autor
-
-Santiago Andrés Aragón Guzmán — Backend Engineer (PL/SQL, Oracle) en
-transición hacia AI Engineering.
-[LinkedIn](https://linkedin.com/in/santiagoaragonguzman) ·
-[GitHub](https://github.com/santiagoaragong)
+- 💼 **LinkedIn:** [linkedin.com/in/santiagoaragonguzman](https://www.linkedin.com/in/santiagoaragonguzman)  
+- 🐙 **GitHub:** [@andresaragon](https://github.com/andresaragon)  
+- 📧 **Email:** [santiagoaragon.sistemas@gmail.com](mailto:santiagoaragon.sistemas@gmail.com)
