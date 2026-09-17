@@ -138,9 +138,46 @@ sintácticamente seguro, no semánticamente correcto — es un riesgo de
 fallo silencioso documentado, no resuelto.
 
 - Decisión tomada:
+  El control real contra alucinar una tabla inexistente no está en el
+  LLM, está en el RAG: `sql_generator.py` solo recibe el `schema_context`
+  que trajo `retrieval.py` (top_k=4 fragmentos relevantes), nunca el
+  esquema completo, así que el modelo no tiene "espacio" para nombrar
+  algo fuera de ese contexto. Además, el prompt (`PROMPT_TEMPLATE`) es
+  explícito en dos reglas: solo `SELECT` (nunca INSERT/UPDATE/DELETE/DROP)
+  y no copiar valores literales de los bloques `example_query` salvo que
+  la pregunta actual los mencione. La extracción del SQL de la respuesta
+  cruda (`_extract_sql`) intenta primero un fence de markdown y, si no
+  hay, cae a "desde el primer SELECT en adelante" como fallback.
+
 - Alternativas consideradas y por qué las descarté:
+  Consideré pasarle el esquema completo al LLM y confiar en que "elija"
+  bien las tablas relevantes, sin pasar por retrieval — lo descarté
+  porque no escala: con más tablas se diluye el contexto y sube la
+  probabilidad de que el modelo alucine un nombre. También consideré
+  pedirle salida estructurada (JSON con el SQL) en vez de parsear texto
+  con regex, pero `sqlcoder` vía Ollama no da soporte confiable a tool
+  calling/structured output, así que un regex robusto con fallback fue
+  la opción más simple que realmente funcionaba.
+
 - Cómo lo probé / cómo confirmé que funciona:
+  Probé manualmente contra `ollama run sqlcoder` con el mismo par
+  pregunta+contexto, antes y después de agregar la instrucción explícita
+  de no copiar literales de los ejemplos few-shot. El LLM seguía
+  copiando valores (p. ej. el mismo intervalo de fecha del ejemplo) en
+  varios casos incluso con la instrucción — no reporté esto como
+  "resuelto", lo dejé documentado como limitación conocida en el
+  docstring del módulo.
+
 - Qué le respondería a un entrevistador:
+  "Lo que evita que el LLM invente una tabla que no existe no es el LLM
+  en sí, es el RAG: solo le paso el esquema recuperado y relevante a la
+  pregunta, así que no tiene contexto para alucinar un nombre fuera de
+  eso. Pero encontré un riesgo distinto que no logré eliminar del todo:
+  el modelo puede copiar un valor literal de un ejemplo few-shot que no
+  corresponde a la pregunta actual. Lo probé manualmente, agregué una
+  instrucción explícita en el prompt, y no lo resolvió de forma
+  confiable — preferí dejarlo documentado como limitación conocida en
+  vez de fingir que estaba resuelto."
 
 - **Contexto adicional (caso real de producción):** este mismo patrón
   de comportamiento — inconsistencia y falta de uso óptimo de índices —
@@ -157,10 +194,45 @@ fallo silencioso documentado, no resuelto.
 un filtro de texto?
 
 - Decisión tomada:
+  `is_safe_select()` parsea el SQL con `sqlglot` (dialecto `postgres`) y
+  exige dos cosas sobre el árbol resultante: que haya exactamente un
+  statement, y que ese statement sea una instancia de `exp.Select`. Eso
+  rechaza automáticamente cualquier intento de statement múltiple sin
+  necesitar una lista de palabras prohibidas. `enforce_limit()` opera
+  también sobre el AST: si no hay `LIMIT`, lo agrega; si el que trae
+  supera `max_rows`, lo reemplaza. `validate_and_prepare()` es el único
+  punto de entrada que combina ambas validaciones antes de ejecutar.
+
 - Alternativas consideradas y por qué las descarté:
+  La alternativa obvia es un filtro de texto (regex buscando `DROP`,
+  `DELETE`, etc., o `.upper().startswith("SELECT")`). La descarté porque
+  es trivialmente evadible: un `;` seguido de otro statement, o una
+  palabra prohibida escondida después de un comentario `--`, rompen un
+  filtro de texto pero no un parser real, que construye el árbol
+  sintáctico completo y ve el segundo statement igual.
+
 - Cómo lo probé / cómo confirmé que funciona (¿qué casos rompiste a
   propósito?):
+  `tests/test_safety.py` cubre explícitamente los dos bypass clásicos de
+  un filtro de texto: `test_select_with_subquery_insert_is_rejected`
+  (un `SELECT` válido seguido de `; INSERT ...` en la misma cadena) y
+  `test_update_disguised_as_comment_is_rejected` (un `UPDATE` después de
+  un comentario `--`). Ambos deben rechazarse aunque el primer statement
+  sea un `SELECT` perfectamente válido. También probé `enforce_limit` en
+  sus tres casos: sin `LIMIT` (debe agregarlo), con `LIMIT` por debajo
+  del máximo (debe respetarlo tal cual), y con `LIMIT` por encima del
+  máximo (debe recortarlo, sin dejar rastro del valor original en el SQL
+  final).
+
 - Qué le respondería a un entrevistador:
+  "Un filtro de texto asume que el SQL peligroso se va a ver 'obvio'.
+  Un parser real como sqlglot construye el árbol sintáctico completo,
+  así que no importa si el statement destructivo viene después de un
+  `;` o de un comentario `--` — sqlglot lo sigue viendo como un segundo
+  statement en el árbol, y mi regla es tajante: solo se permite
+  exactamente un `Select`. Lo probé rompiéndolo a propósito con esos dos
+  bypasses clásicos para confirmar que el parser los atrapa donde un
+  regex no lo haría."
 
 ---
 
@@ -218,11 +290,47 @@ Esta sección es la que releo antes de una entrevista técnica.
 
 **¿Qué problema real resuelve este proyecto, en 2-3 frases, sin jerga?**
 
+Deja que alguien pregunte en lenguaje natural sobre datos que viven en
+una base relacional (facturas, clientes, cobranza) sin que necesite
+saber SQL — y sin exponer la base a que un LLM ejecute algo destructivo
+o corra una query sin límites. El RAG es lo que le da al modelo el
+esquema real (nombres de tablas y columnas reales) en vez de dejarlo
+adivinar.
+
 **¿Cuál fue la decisión de diseño más difícil y por qué?**
+
+Aceptar que `safety.py` solo puede garantizar seguridad sintáctica
+(que el SQL sea un `SELECT` válido y nada más), no corrección
+semántica. Probé varias veces reforzar el prompt para que el LLM no
+copiara valores literales de los ejemplos few-shot, y no lo resolví de
+forma confiable (ver Módulo 4). La decisión difícil fue documentar eso
+como una limitación conocida y abierta en vez de seguir iterando el
+prompt buscando una solución que quizás no existe con este approach —
+o peor, reportarlo como resuelto sin haberlo verificado a fondo.
 
 **¿Qué haría diferente si lo rehiciera hoy?**
 
+Implementaría desde el principio el retrieval híbrido (semántico +
+foreign keys vía `information_schema.key_column_usage`) descrito en el
+README, en vez de dejarlo como mejora futura — con solo 4 tablas el
+LLM infiere los JOINs por los nombres de columna, pero es la primera
+cosa que se rompe al escalar el esquema. También loggearía el SQL
+generado desde el día 1 (aunque sea a un archivo plano), porque los
+patrones de filtro reales no se pueden adivinar de antemano — hace
+falta ver qué preguntas se hacen de verdad antes de decidir qué
+indexar.
+
 **¿Qué NO sé todavía de este proyecto (honestidad, no vender lo que no domino)?**
+
+No probé el sistema bajo concurrencia real: `index_schema.py` borra y
+reindexa todo sin locks, pensado para un solo desarrollador corriéndolo
+localmente, no para múltiples procesos reindexando a la vez.
+`retrieval.py` tampoco tiene `statement_timeout` propio (a diferencia
+de `db.py`) porque asumí que su query es fija y controlada por mí, pero
+no medí qué pasa si el esquema indexado crece mucho. Tampoco validé el
+sistema contra un esquema con más de 4 tablas ni contra preguntas fuera
+del dominio de facturación/cobranza — no sé qué tan bien generalizaría
+el prompt template sin ajustes.
 
 
 
