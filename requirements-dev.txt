@@ -1,0 +1,7 @@
+# Dependencias solo de desarrollo/testing, separadas de requirements.txt
+# para no inflar el entorno de producción con herramientas de carga.
+# Instalar con: pip install -r requirements.txt -r requirements-dev.txt
+
+-r requirements.txt
+
+locust==2.32.4
