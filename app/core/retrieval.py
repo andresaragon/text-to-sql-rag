@@ -18,6 +18,8 @@ en la descripción de collection_actions) para que el retrieval sea
 robusto sin depender de subir top_k.
 """
 
+from functools import lru_cache
+
 from sqlalchemy import bindparam, create_engine, text
 from pgvector.sqlalchemy import Vector
 
@@ -30,6 +32,7 @@ _engine = create_engine(settings.database_url)
 _EMBEDDING_DIM = 384
 
 
+@lru_cache(maxsize=256)
 def retrieve_relevant_schema(question: str, top_k: int = 4) -> str:
     """
     Devuelve un string con el contexto de esquema más relevante para

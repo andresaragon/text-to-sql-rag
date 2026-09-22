@@ -284,6 +284,41 @@ o error evita eso?
 
 ---
 
+## Caching — retrieval + generación de SQL
+
+**Pregunta guía:** ¿Dónde se va la mayor parte del tiempo en `/query` y qué partes del pipeline son seguras de cachear?
+
+- **Qué se cachea y qué no (y por qué):**
+  - **Se cachea:**
+    - `retrieve_relevant_schema(question)`: Generación de embeddings con `sentence-transformers` y búsqueda por similitud coseno (`<=>`) en `pgvector`. Es una operación determinista para una misma pregunta y costosa en CPU/I/O.
+    - `generate_sql(question, schema_context)`: Inferencia del LLM (`sqlcoder` en Ollama). Es por lejos la etapa más lenta del pipeline (latencia de segundos). Dado que usamos `temperature=0` (greedy decoding), la respuesta es determinista para el mismo par de pregunta y contexto de esquema.
+  - **NO se cachea:**
+    - `execute_select(sql)`: La ejecución contra Postgres. Los datos en las tablas (facturas, cobros, estados de clientes) son vivos y cambian continuamente. Cachear los resultados de filas devolvería datos desactualizados (*stale data*), lo cual es inaceptable en una base operativa.
+    - `validate_and_prepare(sql)`: La validación sintáctica y AST con `sqlglot` toma microsegundos en memoria sin I/O, por lo que cachearla no ofrece una ganancia medible.
+
+- **Decisión tomada:**
+  Usé `functools.lru_cache(maxsize=256)` directamente sobre `retrieve_relevant_schema` y `generate_sql`. Es parte de la biblioteca estándar de Python (cero dependencias externas, cero infraestructura adicional), *thread-safe* en CPython y acotado a 256 entradas para evitar crecimiento desmedido de memoria (*unbounded memory leak*).
+
+- **Alternativas consideradas y por qué las descarté:**
+  - *Cache con TTL (Time-To-Live, ej. cachetools)*: Un TTL expira entradas en función del tiempo transcurrido. Lo descarté porque el esquema no muta periódicamente por tiempo, sino por eventos discretos (cuando el desarrollador reindexa). Un TTL causaría *cache misses* artificiales e innecesarios en preguntas frecuentes, y durante la ventana de tiempo seguiría sirviendo datos viejos de todos modos.
+  - *Redis / KeyDB externo*: Introducir un servicio de cache externo en esta etapa violaría la restricción de simplicidad para desarrollo local de un solo proceso y agregaría sobrecarga de serialización y mantenimiento de infraestructura.
+
+- **Política de invalidación y limitaciones conocidas:**
+  - Al ser un cache en memoria del proceso, si se reindexa el esquema con `scripts/index_schema.py` o se modifica la documentación de tablas, las entradas cacheadas quedan desactualizadas (*stale*) hasta que se reinicie el proceso de Uvicorn (o se invoque explícitamente `.cache_clear()`).
+  - Esta es una limitación conocida y aceptada para el entorno actual de desarrollo local.
+
+- **Escalabilidad y próximo paso (por qué in-memory no escala a múltiples workers):**
+  - *In-memory alcanza para este estadio*: Uvicorn corre como un único proceso worker en local, compartiendo el espacio de memoria de Python.
+  - *Por qué no escala a múltiples workers o réplicas*: En producción con Uvicorn multi-worker (`--workers 4`) o réplicas en Kubernetes, cada worker tiene su propio proceso y memoria aislada. Requests idénticos distribuidos por un balanceador caerían en distintos workers con caches fríos (*cache duplication* y menor *hit ratio*), y limpiar el cache en un worker no limpiaría el de los demás (inconsistencia de estado).
+  - *Próximo paso*: Migrar a un cache distribuido compartido (Redis) con claves compuestas basadas en hash de la pregunta y un hash de versión del esquema (`schema_version:question_hash`), invalidable ante despliegues o reindexaciones.
+
+- **Cómo lo probé / cómo confirmé que funciona:**
+  Escribí `tests/test_caching.py` con pruebas unitarias y de integración del endpoint `POST /query` usando `pytest` y `unittest.mock`. Con mocks sobre `embed_text`, `_engine.connect`, `_client.generate` y `execute_select`:
+  - Se confirmó que al enviar la misma pregunta dos veces, `embed_text` y `_client.generate` se ejecutan exactamente 1 vez (cache hit), mientras que `execute_select` se ejecuta 2 veces (sin cachear).
+  - Se confirmó que ante preguntas distintas el cache produce miss y recalcula ambas etapas.
+
+---
+
 ## Resumen final (llenar al terminar todo el proyecto)
 
 Esta sección es la que releo antes de una entrevista técnica.
