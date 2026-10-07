@@ -23,7 +23,6 @@ corrección semántica de si un filtro literal responde a la pregunta de negocio
 from typing import Optional, Set
 import sqlglot
 from sqlglot import exp
-from sqlglot.errors import SqlglotError
 
 DEFAULT_ALLOWED_TABLES: Set[str] = {
     "customers",
@@ -45,7 +44,36 @@ DANGEROUS_FUNCTIONS: Set[str] = {
     "pg_terminate_backend",
     "pg_reload_conf",
     "pg_tablespace_location",
+    "version",
+    # Funciones de información del entorno: revelan identidad, base y red del servidor
+    # (fuga de datos de entorno útil para ataques posteriores).
+    "current_database",
+    "current_user",
+    "session_user",
+    "current_schema",
+    "current_schemas",
+    "inet_server_addr",
+    "inet_server_port",
+    "inet_client_addr",
+    "inet_client_port",
 }
+
+# Formas de palabra clave sin paréntesis que sqlglot parsea como columnas sin calificar
+# (p. ej. "SELECT session_user"). Se bloquean igual que sus llamadas con paréntesis.
+DANGEROUS_KEYWORD_COLUMNS: Set[str] = {
+    "current_user",
+    "session_user",
+    "current_schema",
+}
+
+# Se bloquean familias de funciones PostgreSQL peligrosas por prefijo o patrón,
+# para cubrir variantes de acceso al sistema, large objects y ejecución remota.
+DANGEROUS_FUNCTION_PREFIXES = ("pg_", "lo_", "txid_", "dblink")
+DANGEROUS_FUNCTION_PATTERNS = ("_to_xml",)
+
+# Tope para OFFSET: un desplazamiento enorme fuerza escaneos largos sobre la tabla
+# (DoS leve). Se aplica a todos los nodos OFFSET del AST, incluidas subconsultas y CTEs.
+MAX_OFFSET = 10_000
 
 
 class UnsafeQueryError(Exception):
@@ -68,13 +96,13 @@ def is_safe_select(sql: str) -> bool:
     """Verifica que el SQL sea una única sentencia SELECT (o UNION), sin DDL/DML."""
     try:
         statements = [s for s in sqlglot.parse(sql, dialect="postgres") if s is not None]
-    except SqlglotError:
+    except Exception:
         return False
 
     if len(statements) != 1:
         return False
 
-    return isinstance(statements[0], (exp.Select, exp.Union))
+    return isinstance(statements[0], (exp.Select, exp.SetOperation))
 
 
 
@@ -107,19 +135,39 @@ def check_table_whitelist(statement: exp.Expression, allowed_tables: Set[str]) -
 
 def check_dangerous_functions(statement: exp.Expression) -> None:
     """Verifica que el AST no contenga llamadas a funciones de sistema bloqueadas."""
-    for anon in statement.find_all(exp.Anonymous):
-        func_name = anon.name.lower()
-        if func_name in DANGEROUS_FUNCTIONS:
+    for func in statement.find_all(exp.Func):
+        # Anonymous conserva el identificador escrito en SQL; las funciones
+        # tipadas de sqlglot exponen su nombre SQL mediante sql_name().
+        raw_name = func.name if isinstance(func, exp.Anonymous) else func.sql_name()
+        func_name = (raw_name or "").strip('"').lower().rsplit(".", 1)[-1]
+        blocked = (
+            func_name in DANGEROUS_FUNCTIONS
+            or func_name.startswith(DANGEROUS_FUNCTION_PREFIXES)
+            or any(pattern in func_name for pattern in DANGEROUS_FUNCTION_PATTERNS)
+        )
+        if blocked:
             raise DangerousFunctionError(
                 f"Función bloqueada por seguridad: '{func_name}'"
             )
 
-    for func in statement.find_all(exp.Func):
-        func_name = func.sql_name().lower() if hasattr(func, "sql_name") else func.name.lower()
-        if func_name in DANGEROUS_FUNCTIONS:
+    # Las formas sin paréntesis llegan como columnas; una columna calificada (t.session_user)
+    # es un identificador de tabla real y no la función del sistema.
+    for column in statement.find_all(exp.Column):
+        column_name = (column.name or "").lower()
+        if not column.table and column_name in DANGEROUS_KEYWORD_COLUMNS:
             raise DangerousFunctionError(
-                f"Función bloqueada por seguridad: '{func_name}'"
+                f"Función bloqueada por seguridad: '{column_name}'"
             )
+
+
+def check_offset_limit(statement: exp.Expression) -> None:
+    """Verifica que todo OFFSET del AST sea un entero no negativo menor o igual a MAX_OFFSET."""
+    for offset in statement.find_all(exp.Offset):
+        value = offset.expression
+        # Un valor negativo (Neg), un parámetro o una expresión no literal se rechaza
+        # porque no se puede acotar de forma determinística.
+        if not (isinstance(value, exp.Literal) and value.is_int and 0 <= int(value.this) <= MAX_OFFSET):
+            raise UnsafeQueryError(f"OFFSET excede el máximo permitido ({MAX_OFFSET})")
 
 
 def validate_ast(sql: str, allowed_tables: Optional[Set[str]] = None) -> exp.Select:
@@ -127,24 +175,46 @@ def validate_ast(sql: str, allowed_tables: Optional[Set[str]] = None) -> exp.Sel
     Parsea y valida el AST de la consulta contra todas las reglas del cortafuegos semántico.
     Devuelve el objeto AST parseado si pasa todas las validaciones.
     """
+    if not isinstance(sql, str):
+        raise UnsafeQueryError("La consulta debe ser texto (str)")
+
     if allowed_tables is None:
         allowed_tables = DEFAULT_ALLOWED_TABLES
 
     try:
         statements = [s for s in sqlglot.parse(sql, dialect="postgres") if s is not None]
-    except SqlglotError as err:
-        raise UnsafeQueryError(f"Error al parsear SQL: {err}") from err
+    except Exception as err:
+        raise UnsafeQueryError(f"Error al parsear SQL: {type(err).__name__}") from err
 
     if len(statements) != 1:
         raise NonSelectQueryError(f"Se esperaba exactamente 1 sentencia, se recibieron {len(statements)}")
 
     statement = statements[0]
-    if not isinstance(statement, (exp.Select, exp.Union)):
+    if not isinstance(statement, (exp.Select, exp.SetOperation)):
         raise NonSelectQueryError(f"Solo se permiten sentencias SELECT o UNION. Tipo detectado: {type(statement).__name__}")
 
+    try:
+        for node in statement.walk():
+            if isinstance(node, exp.Lock):
+                raise NonSelectQueryError(
+                    f"Solo se permiten consultas de solo lectura: se detectó {type(node).__name__}"
+                )
+            if isinstance(node, (exp.Insert, exp.Update, exp.Delete, exp.Merge)):
+                raise NonSelectQueryError(
+                    f"Solo se permiten consultas de solo lectura: se detectó {type(node).__name__}"
+                )
+            if isinstance(node, exp.Select) and node.args.get("into") is not None:
+                raise NonSelectQueryError(
+                    "Solo se permiten consultas de solo lectura: se detectó SELECT INTO"
+                )
 
-    check_table_whitelist(statement, allowed_tables)
-    check_dangerous_functions(statement)
+        check_table_whitelist(statement, allowed_tables)
+        check_dangerous_functions(statement)
+        check_offset_limit(statement)
+    except UnsafeQueryError:
+        raise
+    except Exception as err:
+        raise UnsafeQueryError(f"Error al parsear SQL: {type(err).__name__}") from err
 
     return statement
 
@@ -173,4 +243,9 @@ def validate_and_prepare(
 ) -> str:
     """Punto de entrada único: valida el AST contra el cortafuegos y aplica el límite seguro."""
     statement = validate_ast(sql, allowed_tables)
-    return enforce_limit(statement.sql(dialect="postgres"), max_rows)
+    try:
+        return enforce_limit(statement.sql(dialect="postgres"), max_rows)
+    except UnsafeQueryError:
+        raise
+    except Exception as err:
+        raise UnsafeQueryError(f"Error al parsear SQL: {type(err).__name__}") from err
