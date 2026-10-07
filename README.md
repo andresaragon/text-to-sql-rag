@@ -62,13 +62,17 @@ This project delivers a production-pattern solution:
 
 ## 🛡️ AST-Level Safety Guardrails (The Core Engine)
 
-Rather than fragile regex pattern matching, [`app/core/safety.py`](app/core/safety.py) uses `sqlglot` to parse and validate incoming SQL:
+Rather than fragile regex pattern matching, [`app/core/safety.py`](app/core/safety.py) uses `sqlglot` to parse and validate incoming SQL against an enterprise Semantic AST Firewall:
 
 * **Strict Single Statement Check:** Rejects multiple semicolons and stacked statements (e.g., `SELECT 1; DROP TABLE users;`).
-* **Root Expression Verification:** Confirms the root node is strictly `exp.Select`. Any `INSERT`, `UPDATE`, `DELETE`, `DROP`, `ALTER`, or `TRUNCATE` operations trigger an immediate `UnsafeQueryError`.
+* **Root Expression Verification:** Confirms the root node is strictly `exp.Select` or `exp.Union`. Any `INSERT`, `UPDATE`, `DELETE`, `DROP`, `ALTER`, or `TRUNCATE` operations trigger an immediate `NonSelectQueryError`.
+* **Table Whitelist Enforcement:** Restricts execution strictly to authorized business domain tables (`customers`, `invoices`, `payments`, `collection_actions`). Rejects attempts to access system catalogs (`pg_shadow`, `pg_authid`, `information_schema`) or internal RAG metadata (`schema_embeddings`) with `TableNotAllowedError`.
+* **CTE Resolution:** Accurately discounts Common Table Expression names (`WITH ... AS (...)`) from physical table checks to allow advanced analytics without false positives.
+* **Dangerous Function Blacklist:** Blocks time-based blind SQLi (`pg_sleep`), server-side exfiltration (`pg_read_file`, `query_to_xml`), and lateral movement (`dblink`) with `DangerousFunctionError`.
 * **Row-Count Clamping:** Inspects the AST for existing `LIMIT` clauses:
   - If omitted, injects a default `LIMIT 100`.
   - If present but exceeds safety thresholds, clamps it to the maximum allowable limit.
+  - Safely handles non-integer or malformed limits (`LIMIT ALL`, expressions) by falling back to safe limits.
 * **Engine-Level Timeouts:** Automatically sets `statement_timeout = 5000` (5s) per session to eliminate unindexed full-table runaway queries.
 
 ---
@@ -79,21 +83,16 @@ Unit tests cover critical security edge cases, ensuring injection bypasses are c
 
 ```bash
 # Run tests inside the virtual environment
-pytest tests/test_safety.py -v
+pytest tests/ -v
 ```
 
 ```text
-tests/test_safety.py::test_valid_select_is_safe PASSED                [ 12%]
-tests/test_safety.py::test_drop_table_is_rejected PASSED             [ 25%]
-tests/test_safety.py::test_delete_is_rejected PASSED                 [ 37%]
-tests/test_safety.py::test_select_with_subquery_insert_is_rejected PASSED [ 50%]
-tests/test_safety.py::test_update_disguised_as_comment_is_rejected PASSED [ 62%]
-tests/test_safety.py::test_enforce_limit_adds_limit_when_missing PASSED   [ 75%]
-tests/test_safety.py::test_enforce_limit_keeps_limit_below_max PASSED     [ 87%]
-tests/test_safety.py::test_enforce_limit_caps_limit_above_max PASSED      [100%]
+tests/test_caching.py ....                                                [ 17%]
+tests/test_safety.py ....................                                [100%]
 
-============================== 8 passed in 1.10s ===============================
+======================== 24 passed, 1 warning in 8.50s =========================
 ```
+
 
 ---
 
