@@ -3,5 +3,7 @@ venv/
 __pycache__/
 .pytest_cache/
 .env
+.env.*
+!.env.example
 data/embeddings/
 .claude/
