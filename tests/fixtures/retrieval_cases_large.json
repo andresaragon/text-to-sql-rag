@@ -1,0 +1,80 @@
+[
+  {
+    "id": "sales_by_category_and_customer_country",
+    "question": "¿Cuál fue el total facturado por categoría de producto y país del cliente?",
+    "expected_tables": ["customers", "invoices", "invoice_items", "products", "product_categories"],
+    "required_join_edges": [
+      "invoices.customer_id = customers.customer_id",
+      "invoice_items.invoice_id = invoices.invoice_id",
+      "invoice_items.product_id = products.product_id",
+      "products.category_id = product_categories.category_id"
+    ],
+    "distractor_tables": ["customer_addresses", "inventory", "payments"],
+    "reference_sql": "SELECT c.country, pc.category_name, SUM(ii.line_amount) AS total_invoiced FROM invoices i JOIN customers c ON c.customer_id = i.customer_id JOIN invoice_items ii ON ii.invoice_id = i.invoice_id JOIN products p ON p.product_id = ii.product_id JOIN product_categories pc ON pc.category_id = p.category_id GROUP BY c.country, pc.category_name;"
+  },
+  {
+    "id": "overdue_invoices_with_collection_actions",
+    "question": "¿Qué clientes tienen facturas vencidas y qué acciones de cobranza se les hicieron?",
+    "expected_tables": ["customers", "invoices", "collection_actions"],
+    "required_join_edges": [
+      "invoices.customer_id = customers.customer_id",
+      "collection_actions.invoice_id = invoices.invoice_id"
+    ],
+    "distractor_tables": ["customer_contacts", "payments", "credit_notes"],
+    "reference_sql": "SELECT c.full_name, i.invoice_id, ca.action_type, ca.action_date FROM customers c JOIN invoices i ON i.customer_id = c.customer_id JOIN collection_actions ca ON ca.invoice_id = i.invoice_id WHERE i.status = 'overdue';"
+  },
+  {
+    "id": "sold_products_below_stock_at_shipping_warehouse",
+    "question": "¿Qué productos vendidos fueron despachados desde una bodega donde el inventario está por debajo del punto de reposición?",
+    "expected_tables": ["products", "order_items", "shipments", "shipment_items", "warehouses", "inventory"],
+    "required_join_edges": [
+      "order_items.product_id = products.product_id",
+      "shipment_items.order_item_id = order_items.order_item_id",
+      "shipment_items.shipment_id = shipments.shipment_id",
+      "shipments.warehouse_id = warehouses.warehouse_id",
+      "inventory.warehouse_id = warehouses.warehouse_id",
+      "inventory.product_id = products.product_id"
+    ],
+    "distractor_tables": ["invoice_items", "customer_addresses", "payment_methods"],
+    "reference_sql": "SELECT DISTINCT p.product_name, w.warehouse_name FROM shipment_items si JOIN order_items oi ON oi.order_item_id = si.order_item_id JOIN products p ON p.product_id = oi.product_id JOIN shipments s ON s.shipment_id = si.shipment_id JOIN warehouses w ON w.warehouse_id = s.warehouse_id JOIN inventory inv ON inv.warehouse_id = w.warehouse_id AND inv.product_id = p.product_id WHERE inv.quantity_on_hand < inv.reorder_point;"
+  },
+  {
+    "id": "payments_for_delivered_orders_by_region",
+    "question": "¿Cuánto se pagó por las facturas de pedidos entregados en cada región de la bodega?",
+    "expected_tables": ["payments", "invoices", "orders", "shipments", "warehouses", "regions"],
+    "required_join_edges": [
+      "payments.invoice_id = invoices.invoice_id",
+      "invoices.order_id = orders.order_id",
+      "shipments.order_id = orders.order_id",
+      "shipments.warehouse_id = warehouses.warehouse_id",
+      "warehouses.region_id = regions.region_id"
+    ],
+    "distractor_tables": ["sales_representatives", "customer_segments", "credit_notes"],
+    "reference_sql": "SELECT r.region_name, SUM(p.amount_paid) AS total_paid FROM payments p JOIN invoices i ON i.invoice_id = p.invoice_id JOIN orders o ON o.order_id = i.order_id JOIN shipments s ON s.order_id = o.order_id JOIN warehouses w ON w.warehouse_id = s.warehouse_id JOIN regions r ON r.region_id = w.region_id WHERE s.status = 'delivered' GROUP BY r.region_name;"
+  },
+  {
+    "id": "credit_notes_by_customer_segment",
+    "question": "¿Qué monto de notas de crédito se emitió por segmento de cliente?",
+    "expected_tables": ["credit_notes", "invoices", "customers", "customer_segments"],
+    "required_join_edges": [
+      "credit_notes.invoice_id = invoices.invoice_id",
+      "invoices.customer_id = customers.customer_id",
+      "customers.segment_id = customer_segments.segment_id"
+    ],
+    "distractor_tables": ["payments", "collection_actions", "customer_contacts"],
+    "reference_sql": "SELECT cs.segment_name, SUM(cn.amount) AS credit_note_amount FROM credit_notes cn JOIN invoices i ON i.invoice_id = cn.invoice_id JOIN customers c ON c.customer_id = i.customer_id JOIN customer_segments cs ON cs.segment_id = c.segment_id GROUP BY cs.segment_name;"
+  },
+  {
+    "id": "sales_rep_orders_by_customer_shipping_country",
+    "question": "¿Cuántos pedidos confirmó cada representante para clientes con dirección de envío en Colombia?",
+    "expected_tables": ["sales_representatives", "orders", "customers", "customer_addresses"],
+    "required_join_edges": [
+      "orders.sales_rep_id = sales_representatives.sales_rep_id",
+      "orders.customer_id = customers.customer_id",
+      "orders.shipping_address_id = customer_addresses.address_id",
+      "customer_addresses.customer_id = customers.customer_id"
+    ],
+    "distractor_tables": ["regions", "customer_contacts", "shipments"],
+    "reference_sql": "SELECT sr.full_name, COUNT(*) AS confirmed_orders FROM orders o JOIN sales_representatives sr ON sr.sales_rep_id = o.sales_rep_id JOIN customers c ON c.customer_id = o.customer_id JOIN customer_addresses ca ON ca.address_id = o.shipping_address_id AND ca.customer_id = c.customer_id WHERE o.status = 'confirmed' AND ca.country = 'Colombia' GROUP BY sr.full_name;"
+  }
+]
