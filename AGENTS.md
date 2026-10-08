@@ -1,5 +1,3 @@
-@/mnt/d/Claude/Santi's Claude/03 - Proyectos/text-to-sql-rag/text-to-sql-rag.md
-
 ## Contexto técnico
 - (Completa aquí: comandos de build/test, convenciones de código, estructura de carpetas.)
 
@@ -21,4 +19,5 @@ de desarrollo. Si falta algo, instalarlo AHÍ (`.../venv-shared/bin/pip install 
 crear un venv local nuevo dentro del worktree.
 
 ## Notas
-Este archivo importa el contexto de negocio y próximos pasos desde la nota del proyecto en el vault de Obsidian ("Santi's Claude").
+Para contexto de negocio y próximos pasos, ver la nota del proyecto en el vault de Obsidian:
+`/mnt/d/Claude/Santi's Claude/03 - Proyectos/text-to-sql-rag/text-to-sql-rag.md`

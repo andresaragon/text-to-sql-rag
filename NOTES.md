@@ -284,6 +284,41 @@ o error evita eso?
 
 ---
 
+## Caching — retrieval + generación de SQL
+
+**Pregunta guía:** ¿Dónde se va la mayor parte del tiempo en `/query` y qué partes del pipeline son seguras de cachear?
+
+- **Qué se cachea y qué no (y por qué):**
+  - **Se cachea:**
+    - `retrieve_relevant_schema(question)`: Generación de embeddings con `sentence-transformers` y búsqueda por similitud coseno (`<=>`) en `pgvector`. Es una operación determinista para una misma pregunta y costosa en CPU/I/O.
+    - `generate_sql(question, schema_context)`: Inferencia del LLM (`sqlcoder` en Ollama). Es por lejos la etapa más lenta del pipeline (latencia de segundos). Dado que usamos `temperature=0` (greedy decoding), la respuesta es determinista para el mismo par de pregunta y contexto de esquema.
+  - **NO se cachea:**
+    - `execute_select(sql)`: La ejecución contra Postgres. Los datos en las tablas (facturas, cobros, estados de clientes) son vivos y cambian continuamente. Cachear los resultados de filas devolvería datos desactualizados (*stale data*), lo cual es inaceptable en una base operativa.
+    - `validate_and_prepare(sql)`: La validación sintáctica y AST con `sqlglot` toma microsegundos en memoria sin I/O, por lo que cachearla no ofrece una ganancia medible.
+
+- **Decisión tomada:**
+  Usé `functools.lru_cache(maxsize=256)` directamente sobre `retrieve_relevant_schema` y `generate_sql`. Es parte de la biblioteca estándar de Python (cero dependencias externas, cero infraestructura adicional), *thread-safe* en CPython y acotado a 256 entradas para evitar crecimiento desmedido de memoria (*unbounded memory leak*).
+
+- **Alternativas consideradas y por qué las descarté:**
+  - *Cache con TTL (Time-To-Live, ej. cachetools)*: Un TTL expira entradas en función del tiempo transcurrido. Lo descarté porque el esquema no muta periódicamente por tiempo, sino por eventos discretos (cuando el desarrollador reindexa). Un TTL causaría *cache misses* artificiales e innecesarios en preguntas frecuentes, y durante la ventana de tiempo seguiría sirviendo datos viejos de todos modos.
+  - *Redis / KeyDB externo*: Introducir un servicio de cache externo en esta etapa violaría la restricción de simplicidad para desarrollo local de un solo proceso y agregaría sobrecarga de serialización y mantenimiento de infraestructura.
+
+- **Política de invalidación y limitaciones conocidas:**
+  - Al ser un cache en memoria del proceso, si se reindexa el esquema con `scripts/index_schema.py` o se modifica la documentación de tablas, las entradas cacheadas quedan desactualizadas (*stale*) hasta que se reinicie el proceso de Uvicorn (o se invoque explícitamente `.cache_clear()`).
+  - Esta es una limitación conocida y aceptada para el entorno actual de desarrollo local.
+
+- **Escalabilidad y próximo paso (por qué in-memory no escala a múltiples workers):**
+  - *In-memory alcanza para este estadio*: Uvicorn corre como un único proceso worker en local, compartiendo el espacio de memoria de Python.
+  - *Por qué no escala a múltiples workers o réplicas*: En producción con Uvicorn multi-worker (`--workers 4`) o réplicas en Kubernetes, cada worker tiene su propio proceso y memoria aislada. Requests idénticos distribuidos por un balanceador caerían en distintos workers con caches fríos (*cache duplication* y menor *hit ratio*), y limpiar el cache en un worker no limpiaría el de los demás (inconsistencia de estado).
+  - *Próximo paso*: Migrar a un cache distribuido compartido (Redis) con claves compuestas basadas en hash de la pregunta y un hash de versión del esquema (`schema_version:question_hash`), invalidable ante despliegues o reindexaciones.
+
+- **Cómo lo probé / cómo confirmé que funciona:**
+  Escribí `tests/test_caching.py` con pruebas unitarias y de integración del endpoint `POST /query` usando `pytest` y `unittest.mock`. Con mocks sobre `embed_text`, `_engine.connect`, `_client.generate` y `execute_select`:
+  - Se confirmó que al enviar la misma pregunta dos veces, `embed_text` y `_client.generate` se ejecutan exactamente 1 vez (cache hit), mientras que `execute_select` se ejecuta 2 veces (sin cachear).
+  - Se confirmó que ante preguntas distintas el cache produce miss y recalcula ambas etapas.
+
+---
+
 ## Resumen final (llenar al terminar todo el proyecto)
 
 Esta sección es la que releo antes de una entrevista técnica.
@@ -331,6 +366,68 @@ no medí qué pasa si el esquema indexado crece mucho. Tampoco validé el
 sistema contra un esquema con más de 4 tablas ni contra preguntas fuera
 del dominio de facturación/cobranza — no sé qué tan bien generalizaría
 el prompt template sin ajustes.
+
+---
+
+## Load testing — baseline
+
+Script: `scripts/load_test.py` (Locust).
+Dependencias: agregadas en `requirements-dev.txt` (`-r requirements.txt` + `locust==2.32.4`), separadas de `requirements.txt` para no contaminar el entorno de producción con herramientas de benchmarking.
+
+### Diseño del test de carga
+- **HttpUser (`TextToSqlUser`)**: Ejecuta peticiones a `POST /query` rotando aleatoriamente entre 10 preguntas realistas derivadas directamente del esquema de dominio documentado en `data/schema_docs/tables.md` (tablas `customers`, `invoices`, `payments`, `collection_actions`). Se descartaron preguntas genéricas para evaluar el retrieval y la generación sobre relaciones reales.
+- **Aislamiento del cuello de botella (LLM vs DB vs Framework)**:
+  El pipeline de `/query` ejecuta 4 etapas síncronas en cada request:
+  1. Retrieval semántico con pgvector (`retrieve_relevant_schema`)
+  2. Inferencia y generación de SQL vía Ollama (`generate_sql`, modelo `sqlcoder`)
+  3. Validación sintáctica AST con sqlglot (`validate_and_prepare`)
+  4. Ejecución SQL contra Postgres (`execute_select`)
+
+  Medir la latencia exacta por etapa dentro del mismo request requeriría instrumentar `app/core/*` (lo cual violaría la restricción de cero cambios sobre el core). Para aislar el impacto del framework sin tocar el código interno, `load_test.py` incluye una tarea paralela `health_baseline` (10% del peso) que golpea `GET /health` (sin DB, RAG ni LLM). La diferencia entre la latencia de `/health` y `/query` evidencia el overhead del pipeline de IA y datos, dominado por la inferencia en Ollama.
+- **Ejecución headless**: Configurado con `host = "http://localhost:8000"` por defecto, ejecutable directamente con:
+  ```bash
+  locust -f scripts/load_test.py --headless -u 10 -r 2 -t 2m --csv=results
+  ```
+
+### Diagnóstico del entorno y resultados de la corrida inicial (2026-09-21)
+
+Siguiendo la regla de no inventar números cuando la infraestructura base no responde, se verificó cada componente en orden antes de correr Locust. El venv del proyecto no tenía instaladas ni siquiera las dependencias core de `requirements.txt` (`fastapi`, `uvicorn`, `psycopg2`, `sentence-transformers`, `pgvector`, `sqlalchemy`, `sqlglot`) — se instalaron para poder levantar la app y así medir con datos reales en vez de reportar solo "no se pudo".
+
+1. **Servidor FastAPI (`app.main:app`)**:
+   - Inicialmente no estaba en ejecución.
+   - Al lanzarlo con `uvicorn app.main:app --port 8000`, la aplicación inicia correctamente y el endpoint `/health` responde en **~2-4 ms** con código `200 OK` (`{"status":"ok"}`).
+2. **Base de Datos (Postgres + pgvector en `localhost:5432`)**:
+   - El contenedor Docker no está corriendo en el host (no se levantó uno nuevo — fuera de alcance de esta tarea).
+   - Al recibir una solicitud `POST /query`, la etapa 1 (`retrieve_relevant_schema`) intenta conectar al socket `localhost:5432` vía SQLAlchemy/psycopg2. Al no haber servicio escuchando en dicho puerto, el intento se bloquea durante el timeout TCP del sistema operativo (**137.9 segundos**), fallando finalmente con:
+     ```text
+     psycopg2.OperationalError: connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection timed out
+     ```
+     y devolviendo un `HTTP 500 Internal Server Error`.
+3. **Inferencia Local (Ollama en `localhost:11434`)**:
+   - El daemon de Ollama responde en el puerto 11434, pero su registro está vacío (`GET /api/tags` devuelve `{"models":[]}`).
+   - La prueba directa contra la API de inferencia (`POST /api/generate` con `{"model": "sqlcoder"}`) retorna:
+     ```json
+     {"error": "model 'sqlcoder' not found"}
+     ```
+   - No se hizo `ollama pull` — descargar un modelo nuevo también es infraestructura fuera de alcance de esta tarea.
+4. **Resultados bajo carga con la infraestructura actual (10 usuarios concurrentes, corrida real de Locust contra el server levantado)**:
+   - **Throughput efectivo exitoso**: `0.00 req/s` en `/query`.
+   - **Tasa de error**: `100%` en `/query` (peticiones encoladas en timeout de socket de ~138s y HTTP 500).
+   - **Latencias p50 / p95 / p99**: no representativas del pipeline de IA real — el bloqueo ocurre a nivel de socket TCP antes de llegar al retrieval o al LLM.
+
+Estos números son reales (server y Locust corriendo de verdad), no simulados — pero reflejan el costo de una infraestructura incompleta (sin Postgres, sin modelo de Ollama), no el rendimiento del pipeline de IA en sí. Para eso hace falta la corrida con todo levantado (ver abajo).
+
+### Requisitos previos para la siguiente fase de optimización (caching / pooling)
+Para registrar los números de baseline definitivos del pipeline de IA (no solo del fallo de infraestructura) antes de implementar Redis o pooling de conexiones:
+1. Iniciar el contenedor de PostgreSQL con pgvector (`docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=postgres ankane/pgvector`).
+2. Cargar el esquema e indexar vectores: `psql -f db/schema.sql && python scripts/index_schema.py`.
+3. Descargar el modelo en Ollama: `ollama pull sqlcoder`.
+4. Instalar dependencias completas en el venv: `pip install -r requirements.txt -r requirements-dev.txt`.
+5. Levantar el servidor: `uvicorn app.main:app --port 8000`.
+6. Ejecutar Locust en modo headless:
+   ```bash
+   locust -f scripts/load_test.py --headless -u 10 -r 2 -t 2m --host http://localhost:8000 --csv=results
+   ```
 
 
 

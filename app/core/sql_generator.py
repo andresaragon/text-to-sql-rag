@@ -18,6 +18,7 @@ la salida sea determinística/reproducible para la misma pregunta y el
 mismo contexto, en vez de variar de una corrida a otra.
 """
 
+from functools import lru_cache
 import re
 
 from ollama import Client
@@ -66,6 +67,7 @@ def _extract_sql(raw_response: str) -> str:
     return raw_response.strip()
 
 
+@lru_cache(maxsize=256)
 def generate_sql(question: str, schema_context: str) -> str:
     """
     Genera SQL a partir de la pregunta y el contexto de esquema.
