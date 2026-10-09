@@ -199,3 +199,20 @@ def test_enforce_limit_handles_non_numeric_limit_safely():
     result_expr = enforce_limit(sql_expr, max_rows=100)
     assert "LIMIT 100" in result_expr
 
+
+def test_validate_and_prepare_adds_limit_when_missing():
+    assert validate_and_prepare("SELECT a FROM invoices", max_rows=100) == "SELECT a FROM invoices LIMIT 100"
+
+
+def test_validate_and_prepare_rejects_drop_table():
+    with pytest.raises(NonSelectQueryError):
+        validate_and_prepare("DROP TABLE invoices", max_rows=10)
+
+
+def test_validate_and_prepare_rejects_multiple_statements():
+    with pytest.raises(NonSelectQueryError):
+        validate_and_prepare("SELECT 1; SELECT 2", max_rows=10)
+
+
+def test_validate_and_prepare_caps_existing_limit():
+    assert validate_and_prepare("SELECT * FROM invoices LIMIT 50", max_rows=10) == "SELECT * FROM invoices LIMIT 10"
