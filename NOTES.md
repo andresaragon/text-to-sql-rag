@@ -234,6 +234,12 @@ un filtro de texto?
   bypasses clásicos para confirmar que el parser los atrapa donde un
   regex no lo haría."
 
+> **Nota (2026-10-07):** este módulo describe la primera versión del
+> validador (un único `Select`). La regla vigente es más amplia: acepta
+> `SELECT`, `UNION`, `INTERSECT` y `EXCEPT` de solo lectura, y añade lista
+> blanca de tablas, bloqueo de funciones y tope de `OFFSET`. Ver la sección
+> "Endurecimiento del firewall SQL (2026-10-07)" al final de este archivo.
+
 ---
 
 ## Módulo 6 — `app/core/db.py`
@@ -431,3 +437,44 @@ Para registrar los números de baseline definitivos del pipeline de IA (no solo 
 
 
 
+
+---
+
+## Endurecimiento del firewall SQL (2026-10-07)
+
+### Quién hizo qué
+- **Decisiones de diseño:** el líder (Claude Sonnet 5.5) las propuso y yo las revisé y aprobé. Confirmé explícitamente dos: INTERSECT/EXCEPT aceptados y `MAX_OFFSET = 10_000`. La lista blanca de cuatro tablas se mantiene como decisión de diseño.
+- **Tests y contratos de cada issue:** los escribió el líder (Claude Sonnet 5.5) a partir de esas decisiones, antes de que se escribiera el código.
+- **Código de `app/core/safety.py`:** lo escribieron agentes delegados a través del orquestador. Codex (`gpt-6-luna`) resolvió los issues 001, 002 y 004; Claude Haiku (invocado con el alias `haiku`; los logs no registran la versión exacta) resolvió el 003 y el 005.
+- **Auditoría externa:** Codex hizo 5 auditorías de diff como segunda opinión, y el líder verificó cada hallazgo contra el diff.
+
+### Método
+El líder escribió primero los tests adversariales y los corrió contra la implementación existente: de 132 casos, 29 fallaban. El resto ya resistía (tablas con esquema o comillas, alias, CTEs que sombrean tablas, varias sentencias, comentarios, `pg_read_file` y `dblink` en FROM, `SELECT INTO`, `EXPLAIN`). Durante la revisión se añadieron más tests:
+- **Huecos hallados:** OFFSET dentro de subconsultas y CTEs, y funciones de información del entorno (`current_user`, `current_database`, `inet_*`). Ambos pasaban el firewall y se cerraron.
+- **Guarda de regresión:** un bloque de 60 expresiones con funciones comunes de SQL de reportes (`date_trunc`, `coalesce`, `row_number`, `string_agg`, etc.) que el firewall debe seguir aceptando. No encontró ningún rechazo; protege contra que futuros bloqueos por patrón rompan consultas legítimas.
+
+Resultado final: 245 tests en `tests/test_safety_adversarial.py` y 269 en la suite completa.
+
+### Qué se cerró
+- DML y bloqueos dentro de un SELECT, incluido `WITH x AS (DELETE ... RETURNING *) SELECT ...` (pasaba como un SELECT inocente) y `FOR UPDATE/SHARE`.
+- Familias de funciones de sistema por patrón: `pg_*`, `lo_*`, `txid_*`, `dblink*`, `*_to_xml*`, más `version`, `current_setting` y `set_config`.
+- Funciones de identidad y red: `current_user`, `session_user`, `current_database`, `current_schema(s)` e `inet_server/client_addr/port`.
+- Tope de OFFSET (`MAX_OFFSET = 10_000`) aplicado a todos los nodos del AST, no solo a la consulta raíz.
+- Fail-closed: entrada que no es `str` y cualquier excepción inesperada del parser salen como `UnsafeQueryError`.
+- INTERSECT y EXCEPT pasan a aceptarse: era un falso positivo, no un hueco, porque la lista blanca de tablas ya recorre todo el AST.
+
+### Limitación conocida: la lista negra de funciones
+Una lista negra solo bloquea lo que nombra o cubre por patrón; una función nueva o poco común puede pasar. La alternativa es una **lista blanca de funciones** (agregados, fechas, texto, ventanas, `generate_series`): es más segura, pero rompe SQL legítimo que el LLM invente y obliga a mantener un catálogo. Se eligieron patrones de familia como equilibrio. Un efecto lateral aceptado: las formas sin paréntesis (`current_user`, `session_user`, `current_schema`) se bloquean como columna sin calificar, de modo que una columna de negocio con ese nombre exacto también se rechazaría; ninguna tabla actual la tiene.
+
+### Defensa en profundidad
+El firewall es una capa, no la única. En producción hay que sumar:
+- un usuario de BD de solo lectura con `GRANT SELECT` únicamente sobre las cuatro tablas;
+- `statement_timeout` y `lock_timeout` en ese rol;
+- ejecución dentro de una transacción de solo lectura (`SET TRANSACTION READ ONLY`);
+- límites de filas (`LIMIT`, ya implementado) y de conexiones.
+
+Así, un fallo del validador no se convierte en un incidente.
+
+### Observaciones del proceso
+- El auditor externo no encontró ningún hallazgo real: de 5 auditorías, 3 coincidieron con la revisión del líder y 2 fueron falsos positivos. El hueco real del issue 003 (OFFSET en subconsultas) lo halló el sondeo del líder.
+- Barrido de consultas legítimas del proyecto: sin regresiones. Se rechazan las consultas internas del RAG sobre `schema_embeddings` y las de un esquema grande de pruebas, que usan tablas fuera de la lista blanca; con las 19 tablas de ese esquema como `allowed_tables`, pasan 6 de 6.

@@ -38,8 +38,8 @@ Uno de los mayores cuellos de botella al llevar LLMs a empresas reales no es ent
 | **LLM Local** | Ollama (CUDA, GPU RTX 4060) |
 | **Embeddings** | `sentence-transformers` / modelo local |
 | **Backend / API** | Python 3.12 + FastAPI + Pydantic |
-| **Validación de Seguridad** | `sqlglot` (parseo de AST y verificación estricta de solo SELECT) |
-| **Testing** | `pytest` (8/8 tests unitarios de seguridad pasando) |
+| **Validación de Seguridad** | `sqlglot` (Cortafuegos Semántico AST: lista blanca de tablas, funciones bloqueadas y LIMIT clamp) |
+| **Testing** | `pytest` (24/24 tests unitarios de seguridad y caching pasando) |
 
 ---
 
@@ -54,7 +54,7 @@ text-to-sql-rag/
 │   │   ├── db.py          # Conexión y ejecución segura en Postgres
 │   │   ├── embeddings.py  # Generación de vectores de esquema
 │   │   ├── retrieval.py   # Búsqueda semántica en pgvector
-│   │   ├── safety.py      # Guardrails AST con sqlglot (SELECT-only, LIMIT clamp)
+│   │   ├── safety.py      # Cortafuegos Semántico AST con sqlglot (SELECT/UNION, whitelist, blacklist, LIMIT)
 │   │   └── sql_generator.py # Prompt contextualizado y cliente Ollama
 │   ├── config.py          # Variables de entorno y configuración
 │   └── main.py            # Punto de entrada de FastAPI
@@ -66,13 +66,15 @@ text-to-sql-rag/
 ├── scripts/
 │   └── index_schema.py    # Genera embeddings del esquema y los persiste
 ├── tests/
-│   └── test_safety.py     # Suite de validación de seguridad (8/8 pasando)
+│   ├── test_caching.py    # Tests de cacheo de esquemas y queries
+│   └── test_safety.py     # Suite de validación de seguridad (20/20 pasando)
 ├── requirements.txt
 ├── .env.example
 ├── LICENSE
 ├── NOTES.md               # Bitácora técnica y justificación de decisiones
 └── README.md
 ```
+
 
 ---
 
