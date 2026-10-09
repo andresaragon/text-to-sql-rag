@@ -41,7 +41,17 @@ def is_safe_select(sql: str) -> bool:
     if len(statements) != 1:
         return False
 
-    return isinstance(statements[0], exp.Select)
+    statement = statements[0]
+    if not isinstance(statement, exp.Select):
+        return False
+
+    for node in statement.walk():
+        if isinstance(node, (exp.Insert, exp.Update, exp.Delete, exp.Merge)):
+            return False
+        if isinstance(node, exp.Select) and (node.args.get("into") or node.args.get("locks")):
+            return False
+
+    return True
 
 
 def enforce_limit(sql: str, max_rows: int) -> str:
