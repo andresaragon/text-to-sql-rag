@@ -27,6 +27,23 @@ from sqlglot import exp
 from sqlglot.errors import SqlglotError
 
 
+# Funciones de PostgreSQL que pueden acceder al sistema o alterar el estado.
+DANGEROUS_FUNCTIONS = {
+    "pg_sleep",
+    "pg_read_file",
+    "pg_read_binary_file",
+    "pg_ls_dir",
+    "pg_stat_file",
+    "lo_import",
+    "lo_export",
+    "dblink",
+    "dblink_exec",
+    "set_config",
+    "pg_terminate_backend",
+    "pg_cancel_backend",
+}
+
+
 class UnsafeQueryError(Exception):
     """Se lanza cuando el SQL generado no pasa las validaciones de seguridad."""
 
@@ -41,7 +58,19 @@ def is_safe_select(sql: str) -> bool:
     if len(statements) != 1:
         return False
 
-    return isinstance(statements[0], exp.Select)
+    statement = statements[0]
+    if not isinstance(statement, exp.Select):
+        return False
+
+    for node in statement.walk():
+        if isinstance(node, (exp.Insert, exp.Update, exp.Delete, exp.Merge)):
+            return False
+        if isinstance(node, exp.Select) and (node.args.get("into") or node.args.get("locks")):
+            return False
+        if isinstance(node, exp.Func) and node.name.lower() in DANGEROUS_FUNCTIONS:
+            return False
+
+    return True
 
 
 def enforce_limit(sql: str, max_rows: int) -> str:
