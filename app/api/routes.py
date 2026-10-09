@@ -15,7 +15,7 @@ from pydantic import BaseModel
 from app.core.retrieval import retrieve_relevant_schema
 from app.core.sql_generator import generate_sql
 from app.core.safety import validate_and_prepare, UnsafeQueryError
-from app.core.db import execute_select
+from app.core.db import execute_select, QueryTimeoutError, QueryExecutionError
 from app.config import settings
 
 router = APIRouter()
@@ -41,5 +41,10 @@ def query(request: QuestionRequest) -> QueryResponse:
     except UnsafeQueryError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    rows = execute_select(safe_sql)
+    try:
+        rows = execute_select(safe_sql)
+    except QueryTimeoutError as e:
+        raise HTTPException(status_code=504, detail=str(e))
+    except QueryExecutionError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     return QueryResponse(sql=safe_sql, rows=rows, row_count=len(rows))
