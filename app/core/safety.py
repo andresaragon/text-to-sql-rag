@@ -45,6 +45,7 @@ DANGEROUS_FUNCTIONS: Set[str] = {
     "pg_reload_conf",
     "pg_tablespace_location",
     "version",
+    "current_version",
     # Funciones de información del entorno: revelan identidad, base y red del servidor
     # (fuga de datos de entorno útil para ataques posteriores).
     "current_database",
