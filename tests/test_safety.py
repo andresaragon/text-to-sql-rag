@@ -57,3 +57,21 @@ def test_enforce_limit_caps_limit_above_max():
     result = enforce_limit(sql, max_rows=100)
     assert "LIMIT 100" in result
     assert "1000000" not in result
+
+
+def test_validate_and_prepare_adds_limit_when_missing():
+    assert validate_and_prepare("SELECT a FROM t", 100) == "SELECT a FROM t LIMIT 100"
+
+
+def test_validate_and_prepare_rejects_drop_table():
+    with pytest.raises(UnsafeQueryError, match="DROP TABLE t"):
+        validate_and_prepare("DROP TABLE t", 10)
+
+
+def test_validate_and_prepare_rejects_multiple_statements():
+    with pytest.raises(UnsafeQueryError):
+        validate_and_prepare("SELECT 1; SELECT 2", 10)
+
+
+def test_validate_and_prepare_caps_limit_above_max():
+    assert validate_and_prepare("SELECT * FROM t LIMIT 50", 10) == "SELECT * FROM t LIMIT 10"
