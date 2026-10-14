@@ -12,13 +12,13 @@ HASH_PAYLOADS = "637a996348a11a8e2f15d43dd3c14c6c24197ac46860a5f241e19d4f1e4c50b
 
 
 def _fuentes():
-    for carpeta in ("app", "tests"):
+    for carpeta in ("app", "tests", "scripts"):
         yield from (RAIZ / carpeta).rglob("*.py")
 
 
-def test_ruff_check_app_y_tests_sin_hallazgos():
+def test_ruff_check_app_tests_y_scripts_sin_hallazgos():
     r = subprocess.run(
-        [sys.executable, "-m", "ruff", "check", "app", "tests"],
+        [sys.executable, "-m", "ruff", "check", "app", "tests", "scripts"],
         cwd=RAIZ,
         capture_output=True,
         text=True,
