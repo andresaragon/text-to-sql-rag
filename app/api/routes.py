@@ -12,11 +12,11 @@ Flujo:
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, field_validator
 
-from app.core.retrieval import retrieve_relevant_schema
-from app.core.sql_generator import generate_sql
-from app.core.safety import validate_and_prepare, UnsafeQueryError
-from app.core.db import execute_select, QueryTimeoutError, QueryExecutionError
 from app.config import settings
+from app.core.db import QueryExecutionError, QueryTimeoutError, execute_select
+from app.core.retrieval import retrieve_relevant_schema
+from app.core.safety import UnsafeQueryError, validate_and_prepare
+from app.core.sql_generator import generate_sql
 
 router = APIRouter()
 
@@ -29,10 +29,10 @@ class QuestionRequest(BaseModel):
     def validate_question(cls, v: str) -> str:
         trimmed = v.strip()
         if not trimmed:
-            raise ValueError("question cannot be empty or whitespace only")
+            raise ValueError("La pregunta no puede estar vacía")
         if len(trimmed) > settings.max_question_chars:
             raise ValueError(
-                f"question exceeds maximum length of {settings.max_question_chars} characters"
+                f"La pregunta excede el máximo de {settings.max_question_chars} caracteres"
             )
         return trimmed
 
