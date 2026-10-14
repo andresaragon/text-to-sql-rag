@@ -16,8 +16,8 @@ Uso:
     python scripts/check_retrieval.py
 """
 
-from sqlalchemy import bindparam, create_engine, text
 from pgvector.sqlalchemy import Vector
+from sqlalchemy import bindparam, create_engine, text
 
 from app.config import settings
 from app.core.embeddings import embed_text

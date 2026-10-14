@@ -38,7 +38,7 @@ interno a sql_generator.py y retrieval.py (fuera de alcance aquí).
 
 import random
 
-from locust import HttpUser, task, between
+from locust import HttpUser, between, task
 
 # Preguntas representativas del dominio documentado en
 # data/schema_docs/tables.md (facturas, clientes, pagos, cobranza).

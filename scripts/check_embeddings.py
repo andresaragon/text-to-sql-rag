@@ -12,7 +12,7 @@ en embeddings.py), la similitud coseno es simplemente el producto punto.
 
 import numpy as np
 
-from app.core.embeddings import embed_text, embed_batch
+from app.core.embeddings import embed_batch, embed_text
 
 
 def cosine_sim(a: list[float], b: list[float]) -> float:

@@ -14,8 +14,8 @@ Uso previsto:
 import re
 from pathlib import Path
 
-from app.core.embeddings import embed_batch
 from app.core.db import execute_select, save_schema_embedding
+from app.core.embeddings import embed_batch
 
 SCHEMA_DOCS_DIR = Path(__file__).parent.parent / "data" / "schema_docs"
 
