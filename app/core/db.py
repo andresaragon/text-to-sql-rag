@@ -3,9 +3,9 @@ Maneja la conexión a PostgreSQL y la ejecución segura de queries,
 incluyendo timeout de ejecución (settings.query_timeout_seconds).
 """
 
+from pgvector.sqlalchemy import Vector
 from sqlalchemy import bindparam, create_engine, text
 from sqlalchemy.exc import DBAPIError, OperationalError
-from pgvector.sqlalchemy import Vector
 
 from app.config import settings
 
@@ -29,14 +29,13 @@ class QueryExecutionError(Exception):
 def execute_select(sql: str) -> list[dict]:
     """Ejecuta un SELECT ya validado y devuelve las filas como lista de dicts."""
     try:
-        with _engine.connect() as conn:
-            with conn.begin():
-                conn.execute(
-                    text("SET LOCAL statement_timeout = :timeout_ms"),
-                    {"timeout_ms": settings.query_timeout_seconds * 1000},
-                )
-                result = conn.execute(text(sql))
-                return [dict(row) for row in result.mappings()]
+        with _engine.connect() as conn, conn.begin():
+            conn.execute(
+                text("SET LOCAL statement_timeout = :timeout_ms"),
+                {"timeout_ms": settings.query_timeout_seconds * 1000},
+            )
+            result = conn.execute(text(sql))
+            return [dict(row) for row in result.mappings()]
     except OperationalError as exc:
         if getattr(exc.orig, "pgcode", None) == _QUERY_CANCELED_SQLSTATE:
             raise QueryTimeoutError(

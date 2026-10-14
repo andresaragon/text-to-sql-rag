@@ -20,8 +20,8 @@ robusto sin depender de subir top_k.
 
 from functools import lru_cache
 
-from sqlalchemy import bindparam, create_engine, text
 from pgvector.sqlalchemy import Vector
+from sqlalchemy import bindparam, create_engine, text
 
 from app.config import settings
 from app.core.embeddings import embed_text

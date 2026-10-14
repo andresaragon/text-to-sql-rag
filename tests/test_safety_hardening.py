@@ -3,8 +3,8 @@ import pytest
 from app.core.safety import (
     NonSelectQueryError,
     UnsafeQueryError,
-    validate_ast,
     validate_and_prepare,
+    validate_ast,
 )
 
 

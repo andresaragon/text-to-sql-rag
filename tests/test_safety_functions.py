@@ -4,7 +4,6 @@ import pytest
 
 from app.core.safety import DangerousFunctionError, validate_ast
 
-
 # Lista fijada aquí deliberadamente: cambios en el firewall no deben cambiar estos casos.
 DANGEROUS_FUNCTIONS_UNDER_TEST = (
     "pg_sleep",

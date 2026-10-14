@@ -11,15 +11,13 @@ Valida:
 import pytest
 
 from app.core.safety import (
+    DangerousFunctionError,
+    NonSelectQueryError,
+    TableNotAllowedError,
     enforce_limit,
     is_safe_select,
     validate_and_prepare,
-    UnsafeQueryError,
-    NonSelectQueryError,
-    TableNotAllowedError,
-    DangerousFunctionError,
 )
-
 
 # ==============================================================================
 # 1. Tests Básicos de Sentencia Única SELECT y DDL/DML (Regresiones protegidas)

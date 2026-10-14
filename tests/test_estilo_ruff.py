@@ -19,7 +19,10 @@ def _fuentes():
 def test_ruff_check_app_y_tests_sin_hallazgos():
     r = subprocess.run(
         [sys.executable, "-m", "ruff", "check", "app", "tests"],
-        cwd=RAIZ, capture_output=True, text=True,
+        cwd=RAIZ,
+        capture_output=True,
+        text=True,
+        check=False,
     )
     assert r.returncode == 0, r.stdout + r.stderr
 

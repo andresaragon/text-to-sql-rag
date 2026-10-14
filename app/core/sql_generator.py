@@ -18,8 +18,8 @@ la salida sea determinística/reproducible para la misma pregunta y el
 mismo contexto, en vez de variar de una corrida a otra.
 """
 
-from functools import lru_cache
 import re
+from functools import lru_cache
 
 from ollama import Client
 

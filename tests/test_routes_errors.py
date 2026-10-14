@@ -5,10 +5,10 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-from app.main import app
 from app.core.db import QueryExecutionError, QueryTimeoutError
 from app.core.retrieval import retrieve_relevant_schema
 from app.core.sql_generator import generate_sql
+from app.main import app
 
 
 @pytest.fixture(autouse=True)

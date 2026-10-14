@@ -105,7 +105,7 @@ REJECT_INPUT = [
     ("-- solo comentario", U),
     ("/* solo comentario */", U),
     ("SELECT * FROM customers WHERE", U),
-    ("SELECT ​* FROM pg_shadow", U),
+    ("SELECT \u200b* FROM pg_shadow", U),
     ("SELECT * FROM pg_shadow ", U),
     ("SELECT * FROM ｐｇ_shadow", U),
     ("SELECT * FROM pg_shаdow", U),
@@ -114,16 +114,24 @@ REJECT_INPUT = [
 
 MUST_ACCEPT = [
     "SELECT * FROM customers",
-    "SELECT c.id, c.name, SUM(i.amount) AS total FROM customers c "
-    "JOIN invoices i ON i.customer_id = c.id GROUP BY c.id, c.name HAVING SUM(i.amount) > 1000",
-    "SELECT * FROM customers c LEFT JOIN invoices i ON i.customer_id = c.id "
-    "LEFT JOIN payments p ON p.invoice_id = i.id",
-    "WITH overdue AS (SELECT * FROM invoices WHERE status = 'overdue') "
-    "SELECT c.name, COUNT(*) FROM overdue o JOIN customers c ON c.id = o.customer_id GROUP BY c.name",
+    (
+        "SELECT c.id, c.name, SUM(i.amount) AS total FROM customers c "
+        "JOIN invoices i ON i.customer_id = c.id GROUP BY c.id, c.name HAVING SUM(i.amount) > 1000"
+    ),
+    (
+        "SELECT * FROM customers c LEFT JOIN invoices i ON i.customer_id = c.id "
+        "LEFT JOIN payments p ON p.invoice_id = i.id"
+    ),
+    (
+        "WITH overdue AS (SELECT * FROM invoices WHERE status = 'overdue') "
+        "SELECT c.name, COUNT(*) FROM overdue o JOIN customers c ON c.id = o.customer_id GROUP BY c.name"
+    ),
     "WITH a AS (SELECT id FROM customers), b AS (SELECT id FROM a) SELECT * FROM b",
     "SELECT id, amount, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY amount DESC) rn FROM invoices",
-    "SELECT customer_id, SUM(amount) OVER (PARTITION BY customer_id ORDER BY due_date "
-    "ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) FROM invoices",
+    (
+        "SELECT customer_id, SUM(amount) OVER (PARTITION BY customer_id ORDER BY due_date "
+        "ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) FROM invoices"
+    ),
     "SELECT * FROM customers WHERE id IN (SELECT customer_id FROM invoices WHERE status = 'overdue')",
     "SELECT * FROM customers c WHERE EXISTS (SELECT 1 FROM invoices i WHERE i.customer_id = c.id)",
     "SELECT * FROM customers WHERE NOT EXISTS (SELECT 1 FROM payments p WHERE p.customer_id = customers.id)",
@@ -142,8 +150,10 @@ MUST_ACCEPT = [
     "SELECT * FROM invoices WHERE due_date < NOW()",
     "SELECT * FROM generate_series(1, 10)",
     "SELECT d::date FROM generate_series('2024-01-01'::date, '2024-12-01'::date, '1 month') AS d",
-    "SELECT * FROM customers c JOIN LATERAL (SELECT * FROM invoices i WHERE i.customer_id = c.id "
-    "ORDER BY due_date DESC LIMIT 1) l ON true",
+    (
+        "SELECT * FROM customers c JOIN LATERAL (SELECT * FROM invoices i WHERE i.customer_id = c.id "
+        "ORDER BY due_date DESC LIMIT 1) l ON true"
+    ),
     "SELECT * FROM customers WHERE name ILIKE '%pg_shadow%'",
     "SELECT * FROM customers WHERE name = 'pg_sleep(10)'",
     "SELECT 'SELECT * FROM pg_shadow' AS note FROM customers",

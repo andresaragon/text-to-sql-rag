@@ -20,18 +20,18 @@ corrección semántica de si un filtro literal responde a la pregunta de negocio
 """
 
 
-from typing import Optional, Set
+
 import sqlglot
 from sqlglot import exp
 
-DEFAULT_ALLOWED_TABLES: Set[str] = {
+DEFAULT_ALLOWED_TABLES: set[str] = {
     "customers",
     "invoices",
     "payments",
     "collection_actions",
 }
 
-DANGEROUS_FUNCTIONS: Set[str] = {
+DANGEROUS_FUNCTIONS: set[str] = {
     "pg_sleep",
     "pg_read_file",
     "pg_write_file",
@@ -61,7 +61,7 @@ DANGEROUS_FUNCTIONS: Set[str] = {
 
 # Formas de palabra clave sin paréntesis que sqlglot parsea como columnas sin calificar
 # (p. ej. "SELECT session_user"). Se bloquean igual que sus llamadas con paréntesis.
-DANGEROUS_KEYWORD_COLUMNS: Set[str] = {
+DANGEROUS_KEYWORD_COLUMNS: set[str] = {
     "current_user",
     "session_user",
     "current_schema",
@@ -97,7 +97,7 @@ def is_safe_select(sql: str) -> bool:
     """Verifica que el SQL sea una única sentencia SELECT (o UNION), sin DDL/DML."""
     try:
         statements = [s for s in sqlglot.parse(sql, dialect="postgres") if s is not None]
-    except Exception:
+    except Exception:  # noqa: BLE001 - Cortafuegos fail-closed ante cualquier error del parser
         return False
 
     if len(statements) != 1:
@@ -107,7 +107,7 @@ def is_safe_select(sql: str) -> bool:
 
 
 
-def extract_tables(statement: exp.Expression) -> Set[str]:
+def extract_tables(statement: exp.Expression) -> set[str]:
     """
     Extrae los nombres de tablas físicas reales del AST, descontando
     los identificadores de CTEs (Common Table Expressions) declaradas en la query.
@@ -123,7 +123,7 @@ def extract_tables(statement: exp.Expression) -> Set[str]:
     return tables
 
 
-def check_table_whitelist(statement: exp.Expression, allowed_tables: Set[str]) -> None:
+def check_table_whitelist(statement: exp.Expression, allowed_tables: set[str]) -> None:
     """Verifica que todas las tablas referenciadas en el AST pertenezcan a la lista blanca."""
     tables_in_query = extract_tables(statement)
     unauthorized = tables_in_query - {t.lower() for t in allowed_tables}
@@ -171,7 +171,7 @@ def check_offset_limit(statement: exp.Expression) -> None:
             raise UnsafeQueryError(f"OFFSET excede el máximo permitido ({MAX_OFFSET})")
 
 
-def validate_ast(sql: str, allowed_tables: Optional[Set[str]] = None) -> exp.Select:
+def validate_ast(sql: str, allowed_tables: set[str] | None = None) -> exp.Select:
     """
     Parsea y valida el AST de la consulta contra todas las reglas del cortafuegos semántico.
     Devuelve el objeto AST parseado si pasa todas las validaciones.
@@ -240,7 +240,7 @@ def enforce_limit(sql: str, max_rows: int) -> str:
 
 
 def validate_and_prepare(
-    sql: str, max_rows: int, allowed_tables: Optional[Set[str]] = None
+    sql: str, max_rows: int, allowed_tables: set[str] | None = None
 ) -> str:
     """Punto de entrada único: valida el AST contra el cortafuegos y aplica el límite seguro."""
     statement = validate_ast(sql, allowed_tables)
