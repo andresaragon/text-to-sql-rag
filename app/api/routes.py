@@ -10,7 +10,7 @@ Flujo:
 """
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 from app.core.retrieval import retrieve_relevant_schema
 from app.core.sql_generator import generate_sql
@@ -23,6 +23,18 @@ router = APIRouter()
 
 class QuestionRequest(BaseModel):
     question: str
+
+    @field_validator("question")
+    @classmethod
+    def validate_question(cls, v: str) -> str:
+        trimmed = v.strip()
+        if not trimmed:
+            raise ValueError("question cannot be empty or whitespace only")
+        if len(trimmed) > settings.max_question_chars:
+            raise ValueError(
+                f"question exceeds maximum length of {settings.max_question_chars} characters"
+            )
+        return trimmed
 
 
 class QueryResponse(BaseModel):

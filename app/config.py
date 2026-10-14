@@ -15,6 +15,7 @@ class Settings:
     )
     max_rows_returned: int = int(os.getenv("MAX_ROWS_RETURNED", "100"))
     query_timeout_seconds: int = int(os.getenv("QUERY_TIMEOUT_SECONDS", "5"))
+    max_question_chars: int = int(os.getenv("MAX_QUESTION_CHARS", "500"))
 
 
 settings = Settings()
