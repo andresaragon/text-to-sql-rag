@@ -11,6 +11,9 @@ Flujo:
   3. validate_and_prepare(sql)            -> validación de seguridad (400)
   4. execute_select(sql)                  -> ejecución contra Postgres (timeout 504, error 400)
 
+Un pool de conexiones agotado (sqlalchemy.exc.TimeoutError) responde 503 en
+las etapas 1 y 4.
+
 Cada respuesta 200 lleva un header Server-Timing con la duración de las 4 etapas.
 """
 
@@ -20,6 +23,7 @@ import time
 from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel, field_validator
 from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import TimeoutError as PoolTimeoutError
 
 from app.config import settings
 from app.core.db import QueryExecutionError, QueryTimeoutError, execute_select
@@ -61,8 +65,9 @@ def query(request: QuestionRequest, response: Response) -> QueryResponse:
     t0 = time.perf_counter()
     try:
         schema = retrieve_relevant_schema(request.question)
-    except OperationalError as exc:
-        # El detalle de psycopg2 (host, puerto) no se devuelve al cliente.
+    except (OperationalError, PoolTimeoutError) as exc:
+        # Base caída o pool agotado. El detalle de psycopg2 (host, puerto) no se
+        # devuelve al cliente.
         raise HTTPException(
             status_code=503, detail="Base de datos no disponible."
         ) from exc
@@ -93,6 +98,10 @@ def query(request: QuestionRequest, response: Response) -> QueryResponse:
     t0 = time.perf_counter()
     try:
         rows = execute_select(safe_sql)
+    except PoolTimeoutError as e:
+        raise HTTPException(
+            status_code=503, detail="Base de datos no disponible."
+        ) from e
     except QueryTimeoutError as e:
         raise HTTPException(status_code=504, detail=str(e)) from e
     except QueryExecutionError as e:

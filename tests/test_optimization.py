@@ -17,6 +17,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import event
 from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import TimeoutError as PoolTimeoutError
 
 from app.config import settings
 from app.core import db, embeddings, retrieval
@@ -187,6 +188,21 @@ def test_ca5_db_down_during_retrieval_returns_503(client, pipeline):
     pipeline.llm.generate.assert_not_called()
 
 
+def test_ca5_pool_exhausted_during_retrieval_returns_503(client, pipeline):
+    pipeline.engine.connect.side_effect = PoolTimeoutError("QueuePool limit reached")
+    res = client.post("/query", json={"question": "¿cuántas facturas hay?"})
+    assert res.status_code == 503
+    assert "QueuePool" not in res.text
+    pipeline.llm.generate.assert_not_called()
+
+
+def test_ca5_pool_exhausted_during_execution_returns_503(client, pipeline):
+    pipeline.exec.side_effect = PoolTimeoutError("QueuePool limit reached")
+    res = client.post("/query", json={"question": "¿cuántas facturas hay?"})
+    assert res.status_code == 503
+    assert "QueuePool" not in res.text
+
+
 def test_ca5_query_timeout_returns_504(client, pipeline):
     pipeline.exec.side_effect = QueryTimeoutError("tardó demasiado")
     res = client.post("/query", json={"question": "¿cuántas facturas hay?"})
@@ -353,7 +369,7 @@ def test_ca11_embedding_model_warmup(enabled, expected_calls):
 # --- CA12: documentación -----------------------------------------------------
 
 
-@pytest.mark.parametrize("readme", ["README.md", "README.es.md"])
+@pytest.mark.parametrize("readme", ["README.md", "README.es.md", ".env.example"])
 def test_ca12_new_env_vars_documented(readme):
     text = (REPO_ROOT / readme).read_text(encoding="utf-8")
     missing = [var for var in NEW_ENV_VARS if var not in text]
