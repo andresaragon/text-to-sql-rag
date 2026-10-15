@@ -24,6 +24,12 @@ _EMBEDDING_DIM = 384
 # SQLSTATE que Postgres devuelve cuando statement_timeout cancela una query.
 _QUERY_CANCELED_SQLSTATE = "57014"
 
+# SQLSTATE de base no disponible: 08 = conexión (rechazada, perdida), 53 = sin
+# recursos (too_many_connections, disco lleno), 57P01-57P03 = servidor apagándose
+# o arrancando. Sin pgcode = el error es del cliente psycopg2 (no pudo conectar o
+# perdió la conexión), así que también cuenta como base no disponible.
+_UNAVAILABLE_SQLSTATE_PREFIXES = ("08", "53", "57P01", "57P02", "57P03")
+
 
 class QueryTimeoutError(Exception):
     """La consulta excedió settings.query_timeout_seconds y fue cancelada."""
@@ -31,6 +37,17 @@ class QueryTimeoutError(Exception):
 
 class QueryExecutionError(Exception):
     """La consulta falló contra la base (SQL inválido, columna inexistente, etc.)."""
+
+
+class DatabaseUnavailableError(Exception):
+    """Postgres no responde, cortó la conexión o no acepta más conexiones."""
+
+
+def _is_unavailable(exc: OperationalError) -> bool:
+    if exc.connection_invalidated:
+        return True
+    pgcode = getattr(exc.orig, "pgcode", None)
+    return pgcode is None or pgcode.startswith(_UNAVAILABLE_SQLSTATE_PREFIXES)
 
 
 def execute_select(sql: str) -> list[dict]:
@@ -48,6 +65,8 @@ def execute_select(sql: str) -> list[dict]:
             raise QueryTimeoutError(
                 "La consulta tardó demasiado, intenta ser más específico."
             ) from exc
+        if _is_unavailable(exc):
+            raise DatabaseUnavailableError("Base de datos no disponible.") from exc
         raise QueryExecutionError(f"No se pudo ejecutar la consulta: {exc.orig}") from exc
     except DBAPIError as exc:
         raise QueryExecutionError(f"No se pudo ejecutar la consulta: {exc.orig}") from exc
