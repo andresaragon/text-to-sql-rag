@@ -139,6 +139,28 @@ uvicorn app.main:app --reload --port 8000
 
 ---
 
+## ⚙️ Configuration & Environment Variables
+
+The application is configured using environment variables (or a `.env` file):
+
+| Variable | Default | Description |
+|---|---|---|
+| `DATABASE_URL` | `postgresql://postgres:postgres@localhost:5432/postgres` | PostgreSQL connection string. |
+| `DB_POOL_SIZE` | `5` | SQLAlchemy connection pool size. |
+| `DB_MAX_OVERFLOW` | `10` | Maximum overflow connections allowed beyond pool size. |
+| `DB_POOL_TIMEOUT_SECONDS` | `10` | Timeout in seconds to wait when retrieving a connection from the pool. |
+| `DB_CONNECT_TIMEOUT_SECONDS` | `3` | Connection timeout in seconds passed to psycopg2 driver to fail fast if database is unreachable. |
+| `MAX_QUESTION_CHARS` | `500` | Maximum character length allowed for user questions after whitespace normalization (rejects with 422 if exceeded). |
+| `MAX_SCHEMA_DISTANCE` | `0.7` | Maximum cosine distance threshold for schema retrieval; off-domain queries exceeding this are rejected early with 422. |
+| `WARMUP_ON_STARTUP` | `True` | Pre-load the embedding model during application startup to avoid first-request latency (`"false"` or `"0"` to disable). |
+| `OLLAMA_HOST` | `http://localhost:11434` | Ollama service endpoint URL. |
+| `OLLAMA_MODEL` | `sqlcoder` | LLM model name used for SQL generation. |
+| `EMBEDDING_MODEL` | `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` | SentenceTransformer model used for embeddings. |
+| `MAX_ROWS_RETURNED` | `100` | Maximum rows allowed in SELECT queries (clamped by AST safety guardrails). |
+| `QUERY_TIMEOUT_SECONDS` | `5` | Query execution timeout in seconds. |
+
+---
+
 ## 📡 API Usage
 
 ### `POST /query`

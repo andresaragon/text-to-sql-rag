@@ -6,7 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.core.db import QueryExecutionError, QueryTimeoutError
-from app.core.retrieval import retrieve_relevant_schema
+from app.core.retrieval import RetrievedSchema, retrieve_relevant_schema
 from app.core.sql_generator import generate_sql
 from app.main import app
 
@@ -45,7 +45,9 @@ def test_query_maps_database_errors(client, error, status_code, detail):
     with patch("app.core.retrieval.embed_text") as mock_embed, \
          patch("app.core.retrieval._engine") as mock_engine, \
          patch("app.core.sql_generator._client") as mock_client, \
-         patch("app.api.routes.retrieve_relevant_schema", return_value=""), \
+         patch(
+             "app.api.routes.retrieve_relevant_schema", return_value=RetrievedSchema(context="", best_distance=0.1)
+         ), \
          patch("app.api.routes.generate_sql", return_value="SELECT 1"), \
          patch("app.api.routes.execute_select", side_effect=error):
         _configure_dependencies(mock_embed, mock_engine, mock_client)
@@ -60,7 +62,9 @@ def test_query_rejects_unsafe_sql_without_executing(client):
     with patch("app.core.retrieval.embed_text") as mock_embed, \
          patch("app.core.retrieval._engine") as mock_engine, \
          patch("app.core.sql_generator._client") as mock_client, \
-         patch("app.api.routes.retrieve_relevant_schema", return_value=""), \
+         patch(
+             "app.api.routes.retrieve_relevant_schema", return_value=RetrievedSchema(context="", best_distance=0.1)
+         ), \
          patch("app.api.routes.generate_sql", return_value="DROP TABLE t"), \
          patch("app.api.routes.execute_select") as mock_execute:
         _configure_dependencies(mock_embed, mock_engine, mock_client)

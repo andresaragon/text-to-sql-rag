@@ -20,6 +20,7 @@ def _mock_retrieval_rows(mock_conn):
             "object_name": "invoices",
             "object_type": "table",
             "description": "Tabla de facturas del sistema",
+            "distance": 0.4,
         }
     ]
 

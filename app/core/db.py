@@ -9,7 +9,14 @@ from sqlalchemy.exc import DBAPIError, OperationalError
 
 from app.config import settings
 
-_engine = create_engine(settings.database_url)
+_engine = create_engine(
+    settings.database_url,
+    pool_pre_ping=True,
+    pool_size=settings.db_pool_size,
+    max_overflow=settings.db_max_overflow,
+    pool_timeout=settings.db_pool_timeout_seconds,
+    connect_args={"connect_timeout": settings.db_connect_timeout_seconds},
+)
 
 # Debe coincidir con schema_embeddings.embedding vector(384) en db/schema.sql
 _EMBEDDING_DIM = 384
