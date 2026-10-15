@@ -98,7 +98,7 @@ psql -h localhost -U postgres -f db/schema.sql
 psql -h localhost -U postgres -f db/seed.sql
 
 # 5. Indexar esquema en pgvector
-python scripts/index_schema.py
+python -m scripts.index_schema
 
 # 6. Ejecutar tests de seguridad
 pytest tests/
