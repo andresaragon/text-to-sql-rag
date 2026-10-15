@@ -109,6 +109,28 @@ uvicorn app.main:app --reload
 
 ---
 
+## ⚙️ Configuración y Variables de Entorno
+
+La aplicación se configura mediante variables de entorno (o archivo `.env`):
+
+| Variable | Default | Descripción |
+|---|---|---|
+| `DATABASE_URL` | `postgresql://postgres:postgres@localhost:5432/postgres` | Cadena de conexión a PostgreSQL. |
+| `DB_POOL_SIZE` | `5` | Tamaño del pool de conexiones de SQLAlchemy. |
+| `DB_MAX_OVERFLOW` | `10` | Conexiones adicionales permitidas sobre el pool antes de encolar. |
+| `DB_POOL_TIMEOUT_SECONDS` | `10` | Segundos de espera para obtener una conexión del pool antes de error. |
+| `DB_CONNECT_TIMEOUT_SECONDS` | `3` | Timeout de conexión TCP en segundos para psycopg2, fallando rápido si Postgres no responde. |
+| `MAX_QUESTION_CHARS` | `500` | Longitud máxima en caracteres permitida para la pregunta normalizada (422 si se supera). |
+| `MAX_SCHEMA_DISTANCE` | `0.7` | Distancia coseno máxima en pgvector para aceptar el esquema; preguntas fuera de dominio se rechazan con 422 antes de llamar al LLM. |
+| `WARMUP_ON_STARTUP` | `True` | Precarga el modelo de embeddings en el lifespan de FastAPI para eliminar latencia en el primer request (`"false"` o `"0"` para desactivar). |
+| `OLLAMA_HOST` | `http://localhost:11434` | URL del servicio Ollama local. |
+| `OLLAMA_MODEL` | `sqlcoder` | Modelo LLM utilizado para generación de SQL. |
+| `EMBEDDING_MODEL` | `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` | Modelo SentenceTransformer para embeddings de esquema. |
+| `MAX_ROWS_RETURNED` | `100` | Límite máximo de filas permitidas por consulta (forzado por guardrail AST). |
+| `QUERY_TIMEOUT_SECONDS` | `5` | Timeout de ejecución de la query en Postgres (segundos). |
+
+---
+
 ## Ejemplo de Consulta
 
 ```http

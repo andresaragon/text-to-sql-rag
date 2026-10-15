@@ -52,6 +52,7 @@ def test_retrieve_relevant_schema_caches_for_repeated_question():
                 "object_name": "invoices",
                 "object_type": "table",
                 "description": "Tabla de facturas del sistema",
+                "distance": 0.4,
             }
         ]
 
@@ -59,7 +60,7 @@ def test_retrieve_relevant_schema_caches_for_repeated_question():
         result2 = retrieve_relevant_schema(question)
 
         assert result1 == result2
-        assert "### table: invoices" in result1
+        assert "### table: invoices" in result1.context
         assert mock_embed.call_count == 1
         assert mock_engine.connect.call_count == 1
 
@@ -80,7 +81,12 @@ def test_retrieve_relevant_schema_miss_for_different_questions():
         mock_conn = MagicMock()
         mock_engine.connect.return_value.__enter__.return_value = mock_conn
         mock_conn.execute.return_value.mappings.return_value.all.return_value = [
-            {"object_name": "invoices", "object_type": "table", "description": "desc"}
+            {
+                "object_name": "invoices",
+                "object_type": "table",
+                "description": "desc",
+                "distance": 0.4,
+            }
         ]
 
         retrieve_relevant_schema(q1)
@@ -139,6 +145,7 @@ def test_query_endpoint_caches_retrieval_and_sql_but_never_db_execution(client):
                 "object_name": "invoices",
                 "object_type": "table",
                 "description": "Tabla de facturas",
+                "distance": 0.4,
             }
         ]
 

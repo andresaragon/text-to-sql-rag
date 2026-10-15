@@ -9,6 +9,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.config import settings
+from app.core.retrieval import RetrievedSchema
 from app.main import app
 
 
@@ -20,7 +21,9 @@ def client():
 @pytest.fixture
 def deps():
     """Sustituye retrieval, LLM y base de datos; devuelve los mocks para inspeccionar las llamadas."""
-    with patch("app.api.routes.retrieve_relevant_schema", return_value="") as retrieve, \
+    with patch(
+        "app.api.routes.retrieve_relevant_schema", return_value=RetrievedSchema(context="", best_distance=0.1)
+    ) as retrieve, \
          patch("app.api.routes.generate_sql", return_value="SELECT 1") as generate, \
          patch("app.api.routes.execute_select", return_value=[{"x": 1}]) as execute:
         yield {"retrieve": retrieve, "generate": generate, "execute": execute}
