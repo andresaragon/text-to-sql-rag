@@ -1,0 +1,249 @@
+{
+  "host": "http://localhost:8001",
+  "first_request_ms": 3519.7,
+  "cold": {
+    "n": 9,
+    "p50_ms": 1187.8,
+    "max_ms": 2192.1,
+    "mean_ms": 1387.1,
+    "statuses": {
+      "200": 8,
+      "400": 1
+    }
+  },
+  "cached": {
+    "n": 10,
+    "p50_ms": 4.3,
+    "max_ms": 5.6,
+    "mean_ms": 4.4,
+    "statuses": {
+      "200": 9,
+      "400": 1
+    }
+  },
+  "off_domain": {
+    "n": 3,
+    "p50_ms": 1000.4,
+    "max_ms": 1481.3,
+    "mean_ms": 1036.8,
+    "statuses": {
+      "200": 2,
+      "400": 1
+    }
+  },
+  "detail": {
+    "cold": [
+      {
+        "question": "¿Cuántos clientes tienen facturas vencidas hace más de 30 días?",
+        "status": 200,
+        "total_ms": 3519.7,
+        "stages_ms": {},
+        "sql": "SELECT COUNT(DISTINCT customer_id) FROM invoices WHERE status = 'overdue' AND due_date < CURRENT_DATE - INTERVAL '30 DAYS' LIMIT 100",
+        "row_count": 1,
+        "detail": null
+      },
+      {
+        "question": "¿Cuál es el monto total pagado por cada cliente?",
+        "status": 200,
+        "total_ms": 1567.4,
+        "stages_ms": {},
+        "sql": "SELECT c.full_name, SUM(p.amount_paid) AS total_paid FROM customers AS c JOIN invoices AS i ON i.customer_id = c.customer_id JOIN payments AS p ON p.invoice_id = i.invoice_id GROUP BY c.full_name LIMIT 100",
+        "row_count": 1,
+        "detail": null
+      },
+      {
+        "question": "¿Qué facturas están pendientes de pago actualmente?",
+        "status": 200,
+        "total_ms": 840.5,
+        "stages_ms": {},
+        "sql": "SELECT COUNT(DISTINCT invoices.customer_id) AS num_overdue_customers FROM invoices WHERE invoices.status = 'overdue' LIMIT 100",
+        "row_count": 1,
+        "detail": null
+      },
+      {
+        "question": "¿Cuáles son los clientes con mayor monto de facturas vencidas?",
+        "status": 200,
+        "total_ms": 1736.3,
+        "stages_ms": {},
+        "sql": "SELECT customers.full_name, SUM(invoices.amount) AS total_amount_overdue FROM invoices JOIN customers ON customers.customer_id = invoices.customer_id WHERE invoices.status = 'overdue' GROUP BY customers.full_name ORDER BY total_amount_overdue DESC NULLS LAST LIMIT 100",
+        "row_count": 2,
+        "detail": null
+      },
+      {
+        "question": "¿Qué acciones de cobranza se han hecho sobre facturas vencidas?",
+        "status": 200,
+        "total_ms": 1122.8,
+        "stages_ms": {},
+        "sql": "SELECT action_type FROM collection_actions WHERE invoice_id IN (SELECT invoice_id FROM invoices WHERE status = 'overdue' AND due_date < CURRENT_DATE - INTERVAL '30 DAYS') LIMIT 100",
+        "row_count": 3,
+        "detail": null
+      },
+      {
+        "question": "¿Cuántos pagos parciales se registraron el último mes?",
+        "status": 200,
+        "total_ms": 852.8,
+        "stages_ms": {},
+        "sql": "SELECT COUNT(*) AS total_partial_payments FROM payments WHERE payment_method = 'partial' AND paid_at >= (CURRENT_DATE - INTERVAL '1 MONTH') LIMIT 100",
+        "row_count": 1,
+        "detail": null
+      },
+      {
+        "question": "¿Cuál es el promedio de días entre la emisión y el pago de una factura?",
+        "status": 200,
+        "total_ms": 2192.1,
+        "stages_ms": {},
+        "sql": "SELECT invoices.invoice_id, payments.payment_id, payments.paid_at, invoices.issued_date, payments.amount_paid, invoices.issued_date - payments.paid_at AS days_between_issue_and_payment FROM invoices JOIN payments ON invoices.invoice_id = payments.invoice_id WHERE invoices.status = 'paid' ORDER BY days_between_issue_and_payment LIMIT 100",
+        "row_count": 1,
+        "detail": null
+      },
+      {
+        "question": "¿Qué clientes no han hecho ningún pago todavía?",
+        "status": 400,
+        "total_ms": 1187.8,
+        "stages_ms": {},
+        "sql": null,
+        "row_count": null,
+        "detail": "No se pudo ejecutar la consulta: column p.customer_id does not exist\nLINE 1: ...s AS c LEFT JOIN payments AS p ON c.customer_id = p.customer...\n                                                             ^\nHINT:  Perhaps you meant to reference the column \"c.customer_id\".\n"
+      },
+      {
+        "question": "¿Cuántas facturas se emitieron por mes en el último año?",
+        "status": 200,
+        "total_ms": 2103.6,
+        "stages_ms": {},
+        "sql": "SELECT COUNT(DISTINCT invoices.customer_id) AS num_customers FROM invoices WHERE invoices.issued_date >= (CURRENT_DATE - INTERVAL '1 YEAR') AND EXTRACT(MONTH FROM invoices.issued_date) = EXTRACT(MONTH FROM CURRENT_DATE) AND EXTRACT(YEAR FROM invoices.issued_date) = EXTRACT(YEAR FROM CURRENT_DATE) LIMIT 100",
+        "row_count": 1,
+        "detail": null
+      },
+      {
+        "question": "¿Cuál es el método de pago más utilizado por los clientes?",
+        "status": 200,
+        "total_ms": 880.4,
+        "stages_ms": {},
+        "sql": "SELECT p.payment_method, COUNT(*) AS COUNT FROM payments AS p GROUP BY p.payment_method ORDER BY COUNT DESC LIMIT 1",
+        "row_count": 1,
+        "detail": null
+      }
+    ],
+    "cached": [
+      {
+        "question": "¿Cuántos clientes tienen facturas vencidas hace más de 30 días?",
+        "status": 200,
+        "total_ms": 4.6,
+        "stages_ms": {},
+        "sql": "SELECT COUNT(DISTINCT customer_id) FROM invoices WHERE status = 'overdue' AND due_date < CURRENT_DATE - INTERVAL '30 DAYS' LIMIT 100",
+        "row_count": 1,
+        "detail": null
+      },
+      {
+        "question": "¿Cuál es el monto total pagado por cada cliente?",
+        "status": 200,
+        "total_ms": 4.3,
+        "stages_ms": {},
+        "sql": "SELECT c.full_name, SUM(p.amount_paid) AS total_paid FROM customers AS c JOIN invoices AS i ON i.customer_id = c.customer_id JOIN payments AS p ON p.invoice_id = i.invoice_id GROUP BY c.full_name LIMIT 100",
+        "row_count": 1,
+        "detail": null
+      },
+      {
+        "question": "¿Qué facturas están pendientes de pago actualmente?",
+        "status": 200,
+        "total_ms": 4.0,
+        "stages_ms": {},
+        "sql": "SELECT COUNT(DISTINCT invoices.customer_id) AS num_overdue_customers FROM invoices WHERE invoices.status = 'overdue' LIMIT 100",
+        "row_count": 1,
+        "detail": null
+      },
+      {
+        "question": "¿Cuáles son los clientes con mayor monto de facturas vencidas?",
+        "status": 200,
+        "total_ms": 4.5,
+        "stages_ms": {},
+        "sql": "SELECT customers.full_name, SUM(invoices.amount) AS total_amount_overdue FROM invoices JOIN customers ON customers.customer_id = invoices.customer_id WHERE invoices.status = 'overdue' GROUP BY customers.full_name ORDER BY total_amount_overdue DESC NULLS LAST LIMIT 100",
+        "row_count": 2,
+        "detail": null
+      },
+      {
+        "question": "¿Qué acciones de cobranza se han hecho sobre facturas vencidas?",
+        "status": 200,
+        "total_ms": 5.6,
+        "stages_ms": {},
+        "sql": "SELECT action_type FROM collection_actions WHERE invoice_id IN (SELECT invoice_id FROM invoices WHERE status = 'overdue' AND due_date < CURRENT_DATE - INTERVAL '30 DAYS') LIMIT 100",
+        "row_count": 3,
+        "detail": null
+      },
+      {
+        "question": "¿Cuántos pagos parciales se registraron el último mes?",
+        "status": 200,
+        "total_ms": 4.4,
+        "stages_ms": {},
+        "sql": "SELECT COUNT(*) AS total_partial_payments FROM payments WHERE payment_method = 'partial' AND paid_at >= (CURRENT_DATE - INTERVAL '1 MONTH') LIMIT 100",
+        "row_count": 1,
+        "detail": null
+      },
+      {
+        "question": "¿Cuál es el promedio de días entre la emisión y el pago de una factura?",
+        "status": 200,
+        "total_ms": 4.3,
+        "stages_ms": {},
+        "sql": "SELECT invoices.invoice_id, payments.payment_id, payments.paid_at, invoices.issued_date, payments.amount_paid, invoices.issued_date - payments.paid_at AS days_between_issue_and_payment FROM invoices JOIN payments ON invoices.invoice_id = payments.invoice_id WHERE invoices.status = 'paid' ORDER BY days_between_issue_and_payment LIMIT 100",
+        "row_count": 1,
+        "detail": null
+      },
+      {
+        "question": "¿Qué clientes no han hecho ningún pago todavía?",
+        "status": 400,
+        "total_ms": 4.1,
+        "stages_ms": {},
+        "sql": null,
+        "row_count": null,
+        "detail": "No se pudo ejecutar la consulta: column p.customer_id does not exist\nLINE 1: ...s AS c LEFT JOIN payments AS p ON c.customer_id = p.customer...\n                                                             ^\nHINT:  Perhaps you meant to reference the column \"c.customer_id\".\n"
+      },
+      {
+        "question": "¿Cuántas facturas se emitieron por mes en el último año?",
+        "status": 200,
+        "total_ms": 4.8,
+        "stages_ms": {},
+        "sql": "SELECT COUNT(DISTINCT invoices.customer_id) AS num_customers FROM invoices WHERE invoices.issued_date >= (CURRENT_DATE - INTERVAL '1 YEAR') AND EXTRACT(MONTH FROM invoices.issued_date) = EXTRACT(MONTH FROM CURRENT_DATE) AND EXTRACT(YEAR FROM invoices.issued_date) = EXTRACT(YEAR FROM CURRENT_DATE) LIMIT 100",
+        "row_count": 1,
+        "detail": null
+      },
+      {
+        "question": "¿Cuál es el método de pago más utilizado por los clientes?",
+        "status": 200,
+        "total_ms": 3.7,
+        "stages_ms": {},
+        "sql": "SELECT p.payment_method, COUNT(*) AS COUNT FROM payments AS p GROUP BY p.payment_method ORDER BY COUNT DESC LIMIT 1",
+        "row_count": 1,
+        "detail": null
+      }
+    ],
+    "off_domain": [
+      {
+        "question": "¿Cuál es la capital de Francia?",
+        "status": 200,
+        "total_ms": 628.8,
+        "stages_ms": {},
+        "sql": "SELECT customers.full_name, customers.country FROM customers WHERE customers.country = 'France' LIMIT 100",
+        "row_count": 0,
+        "detail": null
+      },
+      {
+        "question": "Escribe un poema sobre el mar",
+        "status": 200,
+        "total_ms": 1000.4,
+        "stages_ms": {},
+        "sql": "SELECT COUNT(DISTINCT customer_id) FROM invoices WHERE status = 'overdue' AND due_date < CURRENT_DATE - INTERVAL '30 DAYS' LIMIT 100",
+        "row_count": 1,
+        "detail": null
+      },
+      {
+        "question": "¿Quién ganó el mundial de fútbol de 2014?",
+        "status": 400,
+        "total_ms": 1481.3,
+        "stages_ms": {},
+        "sql": null,
+        "row_count": null,
+        "detail": "Acceso denegado a tablas no autorizadas: ['players', 'teams']. Tablas permitidas: ['collection_actions', 'customers', 'invoices', 'payments']"
+      }
+    ]
+  }
+}

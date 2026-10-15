@@ -129,7 +129,7 @@ psql -h localhost -U postgres -f db/seed.sql
 
 ### 4. Index Schema into pgvector
 ```bash
-python scripts/index_schema.py
+python -m scripts.index_schema
 ```
 
 ### 5. Launch FastAPI Backend

@@ -1,0 +1,338 @@
+{
+  "host": "http://localhost:8002",
+  "first_request_ms": 1235.9,
+  "cold": {
+    "n": 9,
+    "p50_ms": 1122.2,
+    "max_ms": 2196.1,
+    "mean_ms": 1247.1,
+    "statuses": {
+      "400": 1,
+      "200": 8
+    }
+  },
+  "cached": {
+    "n": 10,
+    "p50_ms": 3.8,
+    "max_ms": 4.4,
+    "mean_ms": 3.6,
+    "statuses": {
+      "200": 9,
+      "400": 1
+    }
+  },
+  "off_domain": {
+    "n": 3,
+    "p50_ms": 16.1,
+    "max_ms": 16.2,
+    "mean_ms": 15.9,
+    "statuses": {
+      "422": 3
+    }
+  },
+  "detail": {
+    "cold": [
+      {
+        "question": "¿Cuántos clientes tienen facturas vencidas hace más de 30 días?",
+        "status": 200,
+        "total_ms": 1235.9,
+        "stages_ms": {
+          "retrieval": 360.1,
+          "llm": 867.3,
+          "validate": 1.3,
+          "db": 3.2
+        },
+        "sql": "SELECT COUNT(DISTINCT customer_id) FROM invoices WHERE status = 'overdue' AND due_date < CURRENT_DATE - INTERVAL '30 DAYS' LIMIT 100",
+        "row_count": 1,
+        "detail": null
+      },
+      {
+        "question": "¿Cuál es el monto total pagado por cada cliente?",
+        "status": 400,
+        "total_ms": 317.5,
+        "stages_ms": {},
+        "sql": null,
+        "row_count": null,
+        "detail": "Error al parsear SQL: ParseError"
+      },
+      {
+        "question": "¿Qué facturas están pendientes de pago actualmente?",
+        "status": 200,
+        "total_ms": 934.2,
+        "stages_ms": {
+          "retrieval": 15.5,
+          "llm": 913.5,
+          "validate": 1.2,
+          "db": 2.3
+        },
+        "sql": "SELECT COUNT(DISTINCT invoices.customer_id) AS num_invoices_overdue FROM invoices WHERE invoices.status = 'overdue' LIMIT 100",
+        "row_count": 1,
+        "detail": null
+      },
+      {
+        "question": "¿Cuáles son los clientes con mayor monto de facturas vencidas?",
+        "status": 200,
+        "total_ms": 1660.7,
+        "stages_ms": {
+          "retrieval": 13.1,
+          "llm": 1641.4,
+          "validate": 1.5,
+          "db": 3.2
+        },
+        "sql": "SELECT customers.full_name, SUM(invoices.amount) AS total_amount_overdue FROM invoices JOIN customers ON customers.customer_id = invoices.customer_id WHERE invoices.status = 'overdue' GROUP BY customers.full_name ORDER BY total_amount_overdue DESC NULLS LAST LIMIT 100",
+        "row_count": 2,
+        "detail": null
+      },
+      {
+        "question": "¿Qué acciones de cobranza se han hecho sobre facturas vencidas?",
+        "status": 200,
+        "total_ms": 1122.2,
+        "stages_ms": {
+          "retrieval": 10.3,
+          "llm": 1106.1,
+          "validate": 1.4,
+          "db": 2.6
+        },
+        "sql": "SELECT action_type FROM collection_actions WHERE invoice_id IN (SELECT invoice_id FROM invoices WHERE status = 'overdue' AND due_date < CURRENT_DATE - INTERVAL '30 DAYS') LIMIT 100",
+        "row_count": 3,
+        "detail": null
+      },
+      {
+        "question": "¿Cuántos pagos parciales se registraron el último mes?",
+        "status": 200,
+        "total_ms": 844.9,
+        "stages_ms": {
+          "retrieval": 9.5,
+          "llm": 829.4,
+          "validate": 1.1,
+          "db": 3.4
+        },
+        "sql": "SELECT COUNT(*) AS total_partial_payments FROM payments WHERE payment_method = 'partial' AND paid_at >= (CURRENT_DATE - INTERVAL '1 MONTH') LIMIT 100",
+        "row_count": 1,
+        "detail": null
+      },
+      {
+        "question": "¿Cuál es el promedio de días entre la emisión y el pago de una factura?",
+        "status": 200,
+        "total_ms": 2196.1,
+        "stages_ms": {
+          "retrieval": 10.6,
+          "llm": 2179.1,
+          "validate": 1.7,
+          "db": 2.9
+        },
+        "sql": "SELECT invoices.invoice_id, payments.payment_id, payments.paid_at, invoices.issued_date, payments.amount_paid, invoices.issued_date - payments.paid_at AS days_between_issue_and_payment FROM invoices JOIN payments ON invoices.invoice_id = payments.invoice_id WHERE invoices.status = 'paid' ORDER BY days_between_issue_and_payment LIMIT 100",
+        "row_count": 1,
+        "detail": null
+      },
+      {
+        "question": "¿Qué clientes no han hecho ningún pago todavía?",
+        "status": 200,
+        "total_ms": 1160.5,
+        "stages_ms": {
+          "retrieval": 10.6,
+          "llm": 1144.1,
+          "validate": 1.2,
+          "db": 3.2
+        },
+        "sql": "SELECT COUNT(DISTINCT c.customer_id) AS num_customers_without_payments FROM customers AS c LEFT JOIN payments AS p ON c.customer_id = p.invoice_id WHERE p.invoice_id IS NULL LIMIT 100",
+        "row_count": 1,
+        "detail": null
+      },
+      {
+        "question": "¿Cuántas facturas se emitieron por mes en el último año?",
+        "status": 200,
+        "total_ms": 2107.2,
+        "stages_ms": {
+          "retrieval": 16.4,
+          "llm": 2084.5,
+          "validate": 1.8,
+          "db": 2.9
+        },
+        "sql": "SELECT COUNT(DISTINCT invoices.customer_id) AS num_customers FROM invoices WHERE invoices.issued_date >= (CURRENT_DATE - INTERVAL '1 YEAR') AND EXTRACT(MONTH FROM invoices.issued_date) = EXTRACT(MONTH FROM CURRENT_DATE) AND EXTRACT(YEAR FROM invoices.issued_date) = EXTRACT(YEAR FROM CURRENT_DATE) LIMIT 100",
+        "row_count": 1,
+        "detail": null
+      },
+      {
+        "question": "¿Cuál es el método de pago más utilizado por los clientes?",
+        "status": 200,
+        "total_ms": 880.5,
+        "stages_ms": {
+          "retrieval": 14.2,
+          "llm": 861.0,
+          "validate": 1.2,
+          "db": 2.5
+        },
+        "sql": "SELECT p.payment_method, COUNT(*) AS COUNT FROM payments AS p GROUP BY p.payment_method ORDER BY COUNT DESC LIMIT 1",
+        "row_count": 1,
+        "detail": null
+      }
+    ],
+    "cached": [
+      {
+        "question": "¿Cuántos clientes tienen facturas vencidas hace más de 30 días?",
+        "status": 200,
+        "total_ms": 4.0,
+        "stages_ms": {
+          "retrieval": 0.0,
+          "llm": 0.0,
+          "validate": 1.1,
+          "db": 1.7
+        },
+        "sql": "SELECT COUNT(DISTINCT customer_id) FROM invoices WHERE status = 'overdue' AND due_date < CURRENT_DATE - INTERVAL '30 DAYS' LIMIT 100",
+        "row_count": 1,
+        "detail": null
+      },
+      {
+        "question": "¿Cuál es el monto total pagado por cada cliente?",
+        "status": 400,
+        "total_ms": 1.2,
+        "stages_ms": {},
+        "sql": null,
+        "row_count": null,
+        "detail": "Error al parsear SQL: ParseError"
+      },
+      {
+        "question": "¿Qué facturas están pendientes de pago actualmente?",
+        "status": 200,
+        "total_ms": 3.7,
+        "stages_ms": {
+          "retrieval": 0.0,
+          "llm": 0.0,
+          "validate": 0.8,
+          "db": 1.7
+        },
+        "sql": "SELECT COUNT(DISTINCT invoices.customer_id) AS num_invoices_overdue FROM invoices WHERE invoices.status = 'overdue' LIMIT 100",
+        "row_count": 1,
+        "detail": null
+      },
+      {
+        "question": "¿Cuáles son los clientes con mayor monto de facturas vencidas?",
+        "status": 200,
+        "total_ms": 4.1,
+        "stages_ms": {
+          "retrieval": 0.0,
+          "llm": 0.0,
+          "validate": 1.4,
+          "db": 1.5
+        },
+        "sql": "SELECT customers.full_name, SUM(invoices.amount) AS total_amount_overdue FROM invoices JOIN customers ON customers.customer_id = invoices.customer_id WHERE invoices.status = 'overdue' GROUP BY customers.full_name ORDER BY total_amount_overdue DESC NULLS LAST LIMIT 100",
+        "row_count": 2,
+        "detail": null
+      },
+      {
+        "question": "¿Qué acciones de cobranza se han hecho sobre facturas vencidas?",
+        "status": 200,
+        "total_ms": 3.5,
+        "stages_ms": {
+          "retrieval": 0.0,
+          "llm": 0.0,
+          "validate": 1.0,
+          "db": 1.4
+        },
+        "sql": "SELECT action_type FROM collection_actions WHERE invoice_id IN (SELECT invoice_id FROM invoices WHERE status = 'overdue' AND due_date < CURRENT_DATE - INTERVAL '30 DAYS') LIMIT 100",
+        "row_count": 3,
+        "detail": null
+      },
+      {
+        "question": "¿Cuántos pagos parciales se registraron el último mes?",
+        "status": 200,
+        "total_ms": 3.8,
+        "stages_ms": {
+          "retrieval": 0.0,
+          "llm": 0.0,
+          "validate": 1.1,
+          "db": 1.6
+        },
+        "sql": "SELECT COUNT(*) AS total_partial_payments FROM payments WHERE payment_method = 'partial' AND paid_at >= (CURRENT_DATE - INTERVAL '1 MONTH') LIMIT 100",
+        "row_count": 1,
+        "detail": null
+      },
+      {
+        "question": "¿Cuál es el promedio de días entre la emisión y el pago de una factura?",
+        "status": 200,
+        "total_ms": 4.1,
+        "stages_ms": {
+          "retrieval": 0.0,
+          "llm": 0.0,
+          "validate": 1.4,
+          "db": 1.5
+        },
+        "sql": "SELECT invoices.invoice_id, payments.payment_id, payments.paid_at, invoices.issued_date, payments.amount_paid, invoices.issued_date - payments.paid_at AS days_between_issue_and_payment FROM invoices JOIN payments ON invoices.invoice_id = payments.invoice_id WHERE invoices.status = 'paid' ORDER BY days_between_issue_and_payment LIMIT 100",
+        "row_count": 1,
+        "detail": null
+      },
+      {
+        "question": "¿Qué clientes no han hecho ningún pago todavía?",
+        "status": 200,
+        "total_ms": 3.9,
+        "stages_ms": {
+          "retrieval": 0.0,
+          "llm": 0.0,
+          "validate": 1.3,
+          "db": 1.4
+        },
+        "sql": "SELECT COUNT(DISTINCT c.customer_id) AS num_customers_without_payments FROM customers AS c LEFT JOIN payments AS p ON c.customer_id = p.invoice_id WHERE p.invoice_id IS NULL LIMIT 100",
+        "row_count": 1,
+        "detail": null
+      },
+      {
+        "question": "¿Cuántas facturas se emitieron por mes en el último año?",
+        "status": 200,
+        "total_ms": 4.4,
+        "stages_ms": {
+          "retrieval": 0.0,
+          "llm": 0.0,
+          "validate": 1.4,
+          "db": 1.8
+        },
+        "sql": "SELECT COUNT(DISTINCT invoices.customer_id) AS num_customers FROM invoices WHERE invoices.issued_date >= (CURRENT_DATE - INTERVAL '1 YEAR') AND EXTRACT(MONTH FROM invoices.issued_date) = EXTRACT(MONTH FROM CURRENT_DATE) AND EXTRACT(YEAR FROM invoices.issued_date) = EXTRACT(YEAR FROM CURRENT_DATE) LIMIT 100",
+        "row_count": 1,
+        "detail": null
+      },
+      {
+        "question": "¿Cuál es el método de pago más utilizado por los clientes?",
+        "status": 200,
+        "total_ms": 3.7,
+        "stages_ms": {
+          "retrieval": 0.0,
+          "llm": 0.0,
+          "validate": 1.0,
+          "db": 1.5
+        },
+        "sql": "SELECT p.payment_method, COUNT(*) AS COUNT FROM payments AS p GROUP BY p.payment_method ORDER BY COUNT DESC LIMIT 1",
+        "row_count": 1,
+        "detail": null
+      }
+    ],
+    "off_domain": [
+      {
+        "question": "¿Cuál es la capital de Francia?",
+        "status": 422,
+        "total_ms": 16.2,
+        "stages_ms": {},
+        "sql": null,
+        "row_count": null,
+        "detail": "Pregunta fuera del dominio de la base de datos."
+      },
+      {
+        "question": "Escribe un poema sobre el mar",
+        "status": 422,
+        "total_ms": 15.5,
+        "stages_ms": {},
+        "sql": null,
+        "row_count": null,
+        "detail": "Pregunta fuera del dominio de la base de datos."
+      },
+      {
+        "question": "¿Quién ganó el mundial de fútbol de 2014?",
+        "status": 422,
+        "total_ms": 16.1,
+        "stages_ms": {},
+        "sql": null,
+        "row_count": null,
+        "detail": "Pregunta fuera del dominio de la base de datos."
+      }
+    ]
+  }
+}
