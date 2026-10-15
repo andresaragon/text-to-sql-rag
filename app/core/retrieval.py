@@ -18,31 +18,37 @@ en la descripción de collection_actions) para que el retrieval sea
 robusto sin depender de subir top_k.
 """
 
+from dataclasses import dataclass
 from functools import lru_cache
 
-from sqlalchemy import bindparam, create_engine, text
+from sqlalchemy import bindparam, text
 from pgvector.sqlalchemy import Vector
 
-from app.config import settings
+from app.core.db import _engine
 from app.core.embeddings import embed_text
-
-_engine = create_engine(settings.database_url)
 
 # Debe coincidir con schema_embeddings.embedding vector(384) en db/schema.sql
 _EMBEDDING_DIM = 384
 
 
+@dataclass(frozen=True)
+class RetrievedSchema:
+    context: str
+    best_distance: float | None = None
+
+
 @lru_cache(maxsize=256)
-def retrieve_relevant_schema(question: str, top_k: int = 4) -> str:
+def retrieve_relevant_schema(question: str, top_k: int = 4) -> RetrievedSchema:
     """
-    Devuelve un string con el contexto de esquema más relevante para
-    la pregunta dada, para usar como contexto en el prompt del LLM.
+    Devuelve un RetrievedSchema con el contexto de esquema más relevante para
+    la pregunta dada y la menor distancia encontrada (best_distance).
     """
     question_embedding = embed_text(question)
 
     stmt = text(
         """
-        SELECT object_name, object_type, description
+        SELECT object_name, object_type, description,
+               embedding <=> :question_embedding AS distance
         FROM schema_embeddings
         ORDER BY embedding <=> :question_embedding
         LIMIT :top_k
@@ -55,7 +61,10 @@ def retrieve_relevant_schema(question: str, top_k: int = 4) -> str:
             {"question_embedding": question_embedding, "top_k": top_k},
         ).mappings().all()
 
-    return "\n\n".join(
+    context = "\n\n".join(
         f"### {row['object_type']}: {row['object_name']}\n{row['description']}"
         for row in rows
     )
+    best_distance = min(float(row["distance"]) for row in rows) if rows else None
+
+    return RetrievedSchema(context=context, best_distance=best_distance)
