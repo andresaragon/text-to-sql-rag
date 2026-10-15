@@ -9,7 +9,8 @@ Flujo:
                                              fuera del dominio = 422 (sin llamar al LLM)
   2. generate_sql(question, contexto)     -> SQL generado por el LLM
   3. validate_and_prepare(sql)            -> validación de seguridad (400)
-  4. execute_select(sql)                  -> ejecución contra Postgres (timeout 504, error 400)
+  4. execute_select(sql)                  -> ejecución contra Postgres (timeout 504,
+                                             error de SQL 400, base caída 503)
 
 Un pool de conexiones agotado (sqlalchemy.exc.TimeoutError) responde 503 en
 las etapas 1 y 4.
@@ -26,7 +27,12 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.exc import TimeoutError as PoolTimeoutError
 
 from app.config import settings
-from app.core.db import QueryExecutionError, QueryTimeoutError, execute_select
+from app.core.db import (
+    DatabaseUnavailableError,
+    QueryExecutionError,
+    QueryTimeoutError,
+    execute_select,
+)
 from app.core.retrieval import retrieve_relevant_schema
 from app.core.safety import UnsafeQueryError, validate_and_prepare
 from app.core.sql_generator import generate_sql
@@ -98,7 +104,7 @@ def query(request: QuestionRequest, response: Response) -> QueryResponse:
     t0 = time.perf_counter()
     try:
         rows = execute_select(safe_sql)
-    except PoolTimeoutError as e:
+    except (PoolTimeoutError, DatabaseUnavailableError) as e:
         raise HTTPException(
             status_code=503, detail="Base de datos no disponible."
         ) from e
