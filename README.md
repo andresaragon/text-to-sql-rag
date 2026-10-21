@@ -1,4 +1,4 @@
-# Production-Grade Text-to-SQL Assistant with Schema RAG & AST Safety Guardrails
+# Text-to-SQL Assistant with Schema RAG & AST Safety Guardrails
 
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
@@ -11,7 +11,7 @@
 
 An end-to-end AI system that converts natural language business queries into secure, syntactically verified, and performant SQL queries. 
 
-Designed and built to bridge **5+ years of production experience in enterprise relational databases (Oracle PL/SQL, SQL Server)** with modern **AI Engineering (LLMs, RAG, and Agentic workflows)**.
+Designed and built to bridge **5+ years of production experience with Oracle PL/SQL and SQL** with modern **AI Engineering (LLMs, RAG, and Agentic workflows)**.
 
 ---
 
@@ -55,7 +55,7 @@ One of the greatest challenges in deploying generative AI in enterprise environm
 
 This project delivers a production-pattern solution:
 - **Schema-Pruned RAG:** Embeds database entities (tables, columns, business definitions) into `pgvector`. Only the top relevant schema slice is dynamically injected into the prompt.
-- **Zero-Regex AST Validation (`sqlglot`):** Inspects the query's Abstract Syntax Tree to mathematically guarantee that **only single `SELECT` statements** are ever executed.
+- **Zero-Regex AST Validation (`sqlglot`):** Inspects the query's Abstract Syntax Tree to ensure by design that **only a single `SELECT`** is executed, backed by 245 adversarial tests.
 - **Privacy-First Local Inference:** Fully runnable via **Ollama (GPU CUDA-accelerated)**, ensuring sensitive company schema details never leave on-premise infrastructure.
 
 ---
@@ -200,7 +200,7 @@ Full technical deliberations and trade-offs are documented in [`NOTES.md`](./NOT
 ## 👤 Author
 
 **Santiago Andrés Aragón Guzmán**  
-*Senior Backend Engineer (Oracle PL/SQL, SQL Server) transitioning to AI Engineering.*  
+*Backend Developer (Oracle PL/SQL) transitioning to AI Engineering.*  
 
 - 💼 **LinkedIn:** [linkedin.com/in/santiagoaragonguzman](https://www.linkedin.com/in/santiagoaragonguzman)  
 - 🐙 **GitHub:** [@andresaragon](https://github.com/andresaragon)  
