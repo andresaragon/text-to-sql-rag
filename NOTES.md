@@ -2,9 +2,8 @@
 
 Diario de implementación. El objetivo de este archivo no es documentar
 el código (para eso está el README), sino registrar **decisiones y
-razonamiento** mientras se implementa con Claude Code — para poder
-explicar el proyecto de memoria en una entrevista técnica, sin depender
-de releer el código.
+razonamiento** mientras se implementa con Claude Code, para poder
+explicar el proyecto sin depender de releer el código.
 
 Regla: llenar cada sección con tus propias palabras, después de haber
 implementado y probado el módulo (no antes, no copiando la explicación
@@ -20,8 +19,7 @@ lenguaje natural "se parece" numéricamente a una descripción de tabla?
 - Decisión tomada:
 - Alternativas consideradas y por qué las descarté:
 - Cómo lo probé / cómo confirmé que funciona:
-- Qué le respondería a un entrevistador si me pregunta "¿por qué este
-  modelo de embeddings y no otro?":
+- Justificación técnica ("¿por qué este   modelo de embeddings y no otro?"):
 Decisión tomada: Usé sentence-transformers con paraphrase-multilingual-MiniLM-L12-v2 en vez del modelo en inglés por defecto (all-MiniLM-L6-v2), con normalize_embeddings=True para que la similitud coseno sea directa.
 
 Alternativas consideradas: Probé primero all-MiniLM-L6-v2 (más liviano, ~90MB) pero medí una brecha débil de solo 0.22 entre frases parecidas y distintas en español. Cambié al modelo multilingüe (~470MB, algo más lento) porque está entrenado explícitamente para paráfrasis en español, y la brecha subió a 0.91 — una mejora medible, no solo teórica.
@@ -62,7 +60,7 @@ en el prompt siempre?
   duplicar. También encontré y corregí un bug de formato (un espacio
   perdido en el `.strip()` al reconstruir el texto de cada ejemplo).
 
-- Qué le respondería a un entrevistador:
+- Justificación técnica:
   "Indexar el esquema en vez de meterlo completo en cada prompt permite
   que el retrieval traiga solo el contexto relevante a la pregunta —
   con un esquema grande, mandar todo el esquema en cada prompt
@@ -70,11 +68,11 @@ en el prompt siempre?
   reindexado repetido para confirmar que editar el esquema y volver a
   correr el script no genera duplicados."
 
-1. SET LOCAL vs SET — esto es una trampa clásica con pools de conexiones que mucha gente no conoce. Si usaras SET a secas, el timeout se quedaría "pegado" a la conexión física del pool y podría filtrarse a la siguiente función que reutilice esa misma conexión con otro timeout esperado. SET LOCAL limita el efecto a la transacción actual — se resetea solo. Este es exactamente el tipo de detalle que un entrevistador senior nota si le explicas tu diseño.
+1. SET LOCAL vs SET — esto es una trampa clásica con pools de conexiones que mucha gente no conoce. Si usaras SET a secas, el timeout se quedaría "pegado" a la conexión física del pool y podría filtrarse a la siguiente función que reutilice esa misma conexión con otro timeout esperado. SET LOCAL limita el efecto a la transacción actual — se resetea solo.
 
 2. El bindparam con Vector(384) para el INSERT — este es el punto más delicado del módulo, y con razón: sin ese cast explícito, psycopg2 metería la lista como un ARRAY genérico de Postgres, no como vector, y el INSERT fallaría. Es un buen ejemplo de "la integración entre dos librerías no es automática solo porque ambas existen" — algo que solo se descubre leyendo documentación o, como en este caso, pidiendo la explicación antes de aceptar el código a ciegas.
 
-3. La nota de fragilidad sobre el bind param en SET LOCAL — que te haya avisado que esto depende de un comportamiento específico de psycopg2 (sustitución del lado del cliente, no el protocolo extendido de Postgres) es una señal de honestidad técnica que vale la pena que imites tú también cuando documentes decisiones: no solo "funciona", sino "funciona por esta razón específica, y sería frágil si cambiara X".
+3. Fragilidad del bind param en SET LOCAL: depende de un comportamiento específico de psycopg2 (sustitución del lado del cliente, no el protocolo extendido de Postgres), y dejaría de funcionar si cambiara el driver.
 
 psycopg2-binary==2.9.10  # 2.9.9 no compila en Python 3.14: usa _PyInterpreterState_G
 et, removida de la API interna de CPython
@@ -111,7 +109,7 @@ et, removida de la API interna de CPython
   distancias >0.81, muy separadas del rango 0.37–0.53 de las preguntas
   reales — una brecha clara y medible.
 
-- Qué le respondería a un entrevistador:
+- Justificación técnica:
   "No fijé top_k a ojo — lo validé con preguntas representativas del
   dominio y ajusté cuando encontré un caso donde el valor inicial
   dejaba fuera una tabla necesaria. Además descubrí que la distancia
@@ -168,7 +166,7 @@ fallo silencioso documentado, no resuelto.
   "resuelto", lo dejé documentado como limitación conocida en el
   docstring del módulo.
 
-- Qué le respondería a un entrevistador:
+- Justificación técnica:
   "Lo que evita que el LLM invente una tabla que no existe no es el LLM
   en sí, es el RAG: solo le paso el esquema recuperado y relevante a la
   pregunta, así que no tiene contexto para alucinar un nombre fuera de
@@ -224,7 +222,7 @@ un filtro de texto?
   máximo (debe recortarlo, sin dejar rastro del valor original en el SQL
   final).
 
-- Qué le respondería a un entrevistador:
+- Justificación técnica:
   "Un filtro de texto asume que el SQL peligroso se va a ver 'obvio'.
   Un parser real como sqlglot construye el árbol sintáctico completo,
   así que no importa si el statement destructivo viene después de un
@@ -279,7 +277,7 @@ o error evita eso?
   removida) — actualicé el pin en `requirements.txt` con el motivo
   documentado en un comentario.
 
-- Qué le respondería a un entrevistador:
+- Justificación técnica:
   "El timeout evita que un SQL generado por el LLM — sintácticamente
   válido pero sin condiciones o con un JOIN costoso — se quede corriendo
   indefinidamente y consuma recursos del servidor. Usé `SET LOCAL` en vez
@@ -327,7 +325,7 @@ o error evita eso?
 
 ## Resumen final (llenar al terminar todo el proyecto)
 
-Esta sección es la que releo antes de una entrevista técnica.
+Resumen del proyecto.
 
 **¿Qué problema real resuelve este proyecto, en 2-3 frases, sin jerga?**
 
