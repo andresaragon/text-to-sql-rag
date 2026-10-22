@@ -1,0 +1,11 @@
+# Forzar LF en el repo: Windows reescribía SQL y scripts con CRLF y rompía contenedores.
+* text=auto eol=lf
+
+# Binarios habituales: sin conversión de finales de línea ni diff de texto.
+*.png binary
+*.jpg binary
+*.gif binary
+*.pdf binary
+*.ico binary
+*.woff binary
+*.woff2 binary

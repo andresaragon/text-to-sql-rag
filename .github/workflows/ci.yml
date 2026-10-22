@@ -35,3 +35,15 @@ jobs:
 
       - name: Run tests
         run: pytest -q
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate docker-compose file
+        run: docker compose config -q
+
+      - name: Build image
+        run: docker build -t text-to-sql-rag:ci .

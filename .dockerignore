@@ -1,0 +1,11 @@
+venv/
+.venv/
+.git/
+.orquestador/
+__pycache__/
+*.pyc
+.env
+.env.*
+tests/
+docs/
+*-worktrees/
