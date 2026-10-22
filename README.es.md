@@ -1,5 +1,7 @@
 # Asistente Text-to-SQL con RAG y Guardrails AST
 
+[![CI](https://github.com/andresaragon/text-to-sql-rag/actions/workflows/ci.yml/badge.svg)](https://github.com/andresaragon/text-to-sql-rag/actions/workflows/ci.yml)
+
 > **[🇬🇧 Read in English](README.md)**
 
 Asistente que traduce preguntas en lenguaje natural a consultas SQL seguras, usando RAG (Retrieval-Augmented Generation) para darle al LLM el contexto real del esquema de base de datos — en vez de dejar que "adivine" nombres de tablas y columnas.

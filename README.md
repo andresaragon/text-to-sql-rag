@@ -4,7 +4,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![PostgreSQL + pgvector](https://img.shields.io/badge/PostgreSQL-16%20%2B%20pgvector-336791?logo=postgresql&logoColor=white)](https://github.com/pgvector/pgvector)
 [![sqlglot AST](https://img.shields.io/badge/Security-sqlglot%20AST%20Parser-FF6F00)](https://github.com/tobymao/sqlglot)
-[![Tests Passing](https://img.shields.io/badge/Tests-413%2F413%20Passed-brightgreen)](tests)
+[![CI](https://github.com/andresaragon/text-to-sql-rag/actions/workflows/ci.yml/badge.svg)](https://github.com/andresaragon/text-to-sql-rag/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 > **[🇪🇸 Leer versión en Español](README.es.md)**
@@ -96,7 +96,7 @@ pytest tests/ -v
 ## 🚀 Quickstart
 
 ### Prerequisites
-- Python 3.10+
+- Python 3.12
 - Docker (for PostgreSQL with `pgvector`)
 - Ollama running locally (or any OpenAI-compatible endpoint)
 
