@@ -95,12 +95,30 @@ pytest tests/ -v
 
 ## 🚀 Quickstart
 
-### Prerequisites
-- Python 3.12
-- Docker (for PostgreSQL with `pgvector`)
-- Ollama running locally (or any OpenAI-compatible endpoint)
+### Option A: Docker Compose
 
-### 1. Clone & Setup Environment
+Requirements: Docker and Ollama running on the host, with the `sqlcoder` model available:
+
+```bash
+ollama pull sqlcoder
+docker compose up
+```
+
+The first startup downloads the embedding model. Once the API is ready, try a query:
+
+```bash
+curl -X POST "http://localhost:8000/query" \
+  -H "Content-Type: application/json" \
+  -d '{"question": "Which customers have overdue invoices?"}'
+```
+
+The first question after startup can take about 40 seconds while Ollama loads the model (measured on an RTX 4060); later questions usually respond in seconds. If the LLM is unavailable, the API returns `503`.
+
+> **Ollama from Docker:** On Docker Desktop for Windows and macOS, `host.docker.internal` reaches Ollama on the host. On native Linux, start host Ollama listening on all interfaces with `OLLAMA_HOST=0.0.0.0 ollama serve`, or use the optional Compose profile: `docker compose --profile ollama up -d` and `docker compose exec ollama ollama pull sqlcoder`; with that profile, set `OLLAMA_HOST=http://ollama:11434`. Docker Compose reads `OLLAMA_HOST` from the environment.
+
+### Option B: Manual setup
+
+#### 1. Clone & Set Up Environment
 ```bash
 git clone https://github.com/andresaragon/text-to-sql-rag.git
 cd text-to-sql-rag
@@ -110,26 +128,26 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 2. Launch PostgreSQL with pgvector
+#### 2. Launch PostgreSQL with pgvector
 ```bash
 docker run --name pg-vector \
   -e POSTGRES_PASSWORD=postgres \
   -p 5432:5432 \
-  -d ankane/pgvector
+  -d pgvector/pgvector:pg16
 ```
 
-### 3. Initialize Database & Seed Sample Data
+#### 3. Initialize Database & Seed Sample Data
 ```bash
 psql -h localhost -U postgres -f db/schema.sql
 psql -h localhost -U postgres -f db/seed.sql
 ```
 
-### 4. Index Schema into pgvector
+#### 4. Index Schema into pgvector
 ```bash
 python -m scripts.index_schema
 ```
 
-### 5. Launch FastAPI Backend
+#### 5. Launch FastAPI Backend
 ```bash
 uvicorn app.main:app --reload --port 8000
 ```
@@ -181,6 +199,22 @@ curl -X POST "http://localhost:8000/query" \
   "row_count": 1
 }
 ```
+
+---
+
+## 🔬 How it was tested
+
+- **Unit suite:** 413 tests that need no external services (no Postgres, no Ollama). They run in CI on pushes to `main` and on every pull request.
+- **Adversarial firewall suite:** 245 adversarial tests against the `sqlglot` AST guardrails.
+- **Benchmark with real infrastructure:** first run against real Postgres + pgvector and Ollama (`sqlcoder`, RTX 4060). Full report: [`docs/benchmarks/2026-10-15.md`](docs/benchmarks/2026-10-15.md).
+
+| Metric | Before | After |
+|---|---|---|
+| Unreachable database (IP that does not respond) | **HTTP 500 in 138.5 s** | **HTTP 503 in 4.0 s** |
+| Out-of-domain questions (3) | 2 × 200 with invented SQL, 1 × 400; p50 1000 ms | 3 × 422 without calling the LLM; p50 16 ms |
+| Valid in-domain question, cold (p50, 9 runs) | 1188 ms | 1122 ms — unchanged; about 98 % of the time is the LLM |
+
+> Measured on a laptop with an RTX 4060 (8 GB VRAM) under WSL2, not on a server. These numbers come from that single run; the report has the full environment and the rest of the results.
 
 ---
 

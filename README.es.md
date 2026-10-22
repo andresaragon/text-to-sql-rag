@@ -82,30 +82,57 @@ text-to-sql-rag/
 
 ## Setup Rápido
 
+### Opción A: Docker Compose
+
+Requisitos: Docker y Ollama ejecutándose en el host, con el modelo `sqlcoder` disponible:
+
 ```bash
-# 1. Clonar entorno
+ollama pull sqlcoder
+docker compose up
+```
+
+La primera vez se descarga el modelo de embeddings. Cuando la API esté lista, prueba una consulta:
+
+```bash
+curl -X POST "http://localhost:8000/query" \
+  -H "Content-Type: application/json" \
+  -d '{"question": "Which customers have overdue invoices?"}'
+```
+
+La primera pregunta después de arrancar puede tardar unos 40 segundos mientras Ollama carga el modelo (medido en una RTX 4060); las siguientes suelen responder en segundos. Si el LLM no está disponible, la API responde `503`.
+
+> **Ollama desde Docker:** En Docker Desktop para Windows y macOS, `host.docker.internal` permite llegar al Ollama del host. En Linux nativo, inicia Ollama en todas las interfaces con `OLLAMA_HOST=0.0.0.0 ollama serve`, o usa el perfil opcional de Compose: `docker compose --profile ollama up -d` y `docker compose exec ollama ollama pull sqlcoder`; con ese perfil, configura `OLLAMA_HOST=http://ollama:11434`. Docker Compose lee `OLLAMA_HOST` del entorno.
+
+### Opción B: Configuración manual
+
+#### 1. Clonar y configurar el entorno
+```bash
 git clone https://github.com/andresaragon/text-to-sql-rag.git
 cd text-to-sql-rag
 
-# 2. Configurar entorno virtual e instalar dependencias
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+```
 
-# 3. Levantar Postgres con pgvector (Docker)
-docker run --name pg-vector -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d ankane/pgvector
+#### 2. Levantar PostgreSQL con pgvector
+```bash
+docker run --name pg-vector -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d pgvector/pgvector:pg16
+```
 
-# 4. Cargar esquema y datos de ejemplo
+#### 3. Cargar esquema y datos de ejemplo
+```bash
 psql -h localhost -U postgres -f db/schema.sql
 psql -h localhost -U postgres -f db/seed.sql
+```
 
-# 5. Indexar esquema en pgvector
+#### 4. Indexar esquema en pgvector
+```bash
 python -m scripts.index_schema
+```
 
-# 6. Ejecutar tests de seguridad
-pytest tests/
-
-# 7. Iniciar la API
+#### 5. Iniciar la API FastAPI
+```bash
 uvicorn app.main:app --reload
 ```
 
@@ -164,6 +191,22 @@ En su lugar, **`app/core/safety.py` descompone la consulta en un Árbol de Sinta
 2. **Inspección de nodo raíz:** Garantiza que el statement sea estrictamente una expresión `exp.Select`.
 3. **Clamping de filas (`LIMIT`):** Si la consulta no tiene `LIMIT`, se le inyecta automáticamente. Si solicita más filas que el máximo configurado, se recorta a dicho tope.
 4. **Timeouts en motor:** Inyección de `statement_timeout` para neutralizar consultas desbocadas o scans completos en tablas masivas.
+
+---
+
+## Cómo se probó
+
+- **Suite unitaria:** 413 pruebas que no necesitan servicios externos (ni Postgres ni Ollama). Corren en CI en cada push a `main` y en cada pull request.
+- **Suite adversarial del firewall:** 245 pruebas adversariales contra los guardrails AST de `sqlglot`.
+- **Benchmark con infraestructura real:** primera corrida contra Postgres + pgvector y Ollama reales (`sqlcoder`, RTX 4060). Informe completo: [`docs/benchmarks/2026-10-15.md`](docs/benchmarks/2026-10-15.md).
+
+| Métrica | Antes | Después |
+|---|---|---|
+| Base inalcanzable (IP que no responde) | **HTTP 500 en 138.5 s** | **HTTP 503 en 4.0 s** |
+| Preguntas fuera del dominio (3) | 2 × 200 con SQL inventado, 1 × 400; p50 1000 ms | 3 × 422 sin llamar al LLM; p50 16 ms |
+| Pregunta válida del dominio, en frío (p50, 9 corridas) | 1188 ms | 1122 ms — sin cambio; cerca del 98 % del tiempo es el LLM |
+
+> Medido en un portátil con RTX 4060 (8 GB VRAM) bajo WSL2, no en un servidor. Estas cifras salen de esa única corrida; el informe tiene el entorno completo y el resto de resultados.
 
 ---
 

@@ -1,0 +1,71 @@
+# Start the database, build the schema index, and serve the API with `docker compose up`.
+services:
+  # PostgreSQL with pgvector; initialization scripts run only on an empty data volume.
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  # Generate embeddings for the database schema once before the API starts.
+  indexer:
+    build: .
+    command: ["python", "-m", "scripts.index_schema"]
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/postgres
+      HF_HOME: /hf-cache
+    volumes:
+      - hf-cache:/hf-cache
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  # The API uses Ollama on the host by default; see the optional profile below.
+  api:
+    build: .
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/postgres
+      OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-sqlcoder}
+      HF_HOME: /hf-cache
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - hf-cache:/hf-cache
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      indexer:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # Optional local Ollama; use `docker compose --profile ollama up` and set OLLAMA_HOST=http://ollama:11434.
+  ollama:
+    image: ollama/ollama:0.5.13
+    profiles: ["ollama"]
+    volumes:
+      - ollama-data:/root/.ollama
+
+volumes:
+  postgres-data:
+  hf-cache:
+  ollama-data:

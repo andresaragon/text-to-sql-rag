@@ -21,7 +21,9 @@ Cada respuesta 200 lleva un header Server-Timing con la duración de las 4 etapa
 import re
 import time
 
+import httpx
 from fastapi import APIRouter, HTTPException, Response
+from ollama import ResponseError
 from pydantic import BaseModel, field_validator
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.exc import TimeoutError as PoolTimeoutError
@@ -91,7 +93,12 @@ def query(request: QuestionRequest, response: Response) -> QueryResponse:
         )
 
     t0 = time.perf_counter()
-    raw_sql = generate_sql(request.question, schema.context)
+    try:
+        raw_sql = generate_sql(request.question, schema.context)
+    except (httpx.ConnectError, httpx.TimeoutException, ResponseError, ConnectionError) as exc:
+        raise HTTPException(
+            status_code=503, detail="Modelo de lenguaje no disponible."
+        ) from exc
     t_llm = (time.perf_counter() - t0) * 1000
 
     t0 = time.perf_counter()
