@@ -47,6 +47,34 @@ values. Base every literal in your SQL only on the current question.
 ### SQL:
 """
 
+ORACLE_PROMPT_TEMPLATE = """You are a SQL assistant. Given the database schema
+context below and a question, generate a single valid Oracle SELECT
+query that answers the question. Only output the SQL query, nothing else.
+Never generate INSERT, UPDATE, DELETE, DROP or any statement other than
+SELECT.
+
+Oracle dialect requirements:
+- To limit rows, use FETCH FIRST n ROWS ONLY (never LIMIT).
+- For date operations, use SYSDATE, TRUNC(date, 'MM') and ADD_MONTHS instead of NOW().
+- For string aggregation, use LISTAGG.
+- Never use type casting with ::, ILIKE, NOW(), positional GROUP BY, trailing semicolons (;), bind variables, or optimizer hints.
+
+Some schema context blocks are labeled example_query: these show a past
+question with its SQL, purely to illustrate structure (how to join
+tables, which columns to use, the general shape of the query). Do NOT
+copy specific literal values from them (dates, thresholds, numbers,
+intervals) unless the current question explicitly mentions those same
+values. Base every literal in your SQL only on the current question.
+
+### Schema context:
+{schema_context}
+
+### Question:
+{question}
+
+### SQL:
+"""
+
 _SQL_FENCE_RE = re.compile(r"```(?:sql)?\s*(.*?)```", re.IGNORECASE | re.DOTALL)
 _SELECT_RE = re.compile(r"SELECT\b.*", re.IGNORECASE | re.DOTALL)
 
@@ -67,13 +95,30 @@ def _extract_sql(raw_response: str) -> str:
     return raw_response.strip()
 
 
+def build_prompt(
+    question: str, schema_context: str, dialect: str | None = None
+) -> str:
+    """Construye el prompt para el LLM según el dialecto configurado u objetivo."""
+    target = (dialect or settings.target_dialect).strip().lower()
+
+    if target == "oracle":
+        return ORACLE_PROMPT_TEMPLATE.format(
+            schema_context=schema_context, question=question
+        )
+    return PROMPT_TEMPLATE.format(
+        schema_context=schema_context, question=question
+    )
+
+
 @lru_cache(maxsize=256)
-def generate_sql(question: str, schema_context: str) -> str:
+def generate_sql(
+    question: str, schema_context: str, dialect: str | None = None
+) -> str:
     """
     Genera SQL a partir de la pregunta y el contexto de esquema.
     Devuelve el SQL crudo, sin ejecutar (eso lo hace safety.py + db.py).
     """
-    prompt = PROMPT_TEMPLATE.format(schema_context=schema_context, question=question)
+    prompt = build_prompt(question, schema_context, dialect)
 
     response = _client.generate(
         model=settings.ollama_model,

@@ -1,0 +1,33 @@
+services:
+  oracle:
+    image: gvenzl/oracle-free:23.26.3-slim-faststart
+    environment:
+      ORACLE_PASSWORD: oracle-demo-admin-pw
+    ports:
+      - "127.0.0.1:1521:1521"
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+      - ./db/oracle:/container-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "healthcheck.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 15s
+
+  indexer:
+    environment:
+      TARGET_DIALECT: oracle
+      ALLOWED_SCHEMA: SALES
+
+  api:
+    environment:
+      TARGET_DIALECT: oracle
+      ALLOWED_SCHEMA: SALES
+      TARGET_DATABASE_URL: oracle+oracledb://app_ro:app-ro-demo-pw@oracle:1521/?service_name=FREEPDB1
+    depends_on:
+      oracle:
+        condition: service_healthy
+
+volumes:
+  oracle-data:

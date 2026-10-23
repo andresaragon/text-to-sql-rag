@@ -103,6 +103,24 @@ La primera pregunta después de arrancar puede tardar unos 40 segundos mientras 
 
 > **Ollama desde Docker:** En Docker Desktop para Windows y macOS, `host.docker.internal` permite llegar al Ollama del host. En Linux nativo, inicia Ollama en todas las interfaces con `OLLAMA_HOST=0.0.0.0 ollama serve`, o usa el perfil opcional de Compose: `docker compose --profile ollama up -d` y `docker compose exec ollama ollama pull sqlcoder`; con ese perfil, configura `OLLAMA_HOST=http://ollama:11434`. Docker Compose lee `OLLAMA_HOST` del entorno.
 
+### Ejecutar contra Oracle
+
+Para ejecutar la aplicación utilizando una base de datos Oracle Free 23.26.3 como base objetivo de ejecución (manteniendo PostgreSQL para los embeddings de RAG):
+
+> **Requisitos de recursos y licencia:** La imagen de contenedor de Oracle Free (`gvenzl/oracle-free:23.26.3-slim-faststart`) requiere aproximadamente **4 GB** de memoria RAM y ~6.5 GB de espacio en disco. Ten en cuenta que la descarga de la imagen de Oracle está sujeta a los términos y condiciones de licencia de Oracle Free.
+
+Inicia el entorno usando el archivo de override de Docker Compose:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.oracle.yml up -d
+```
+
+Esto inicia:
+- PostgreSQL + pgvector para los embeddings del esquema.
+- Oracle Free 23.26.3 con el esquema `SALES` (propietario) y la cuenta de solo lectura `APP_RO`.
+- El indexador de esquemas cargando la documentación de Oracle.
+- La API de FastAPI configurada con `TARGET_DIALECT=oracle` y `TARGET_DATABASE_URL` apuntando a Oracle.
+
 ### Opción B: Configuración manual
 
 #### 1. Clonar y configurar el entorno

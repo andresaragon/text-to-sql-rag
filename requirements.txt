@@ -8,6 +8,7 @@ pydantic==2.9.2
 psycopg2-binary==2.9.10  # 2.9.9 no compila en Python 3.14: usa _PyInterpreterState_Get, removida de la API interna de CPython
 pgvector==0.3.4
 SQLAlchemy==2.0.35
+oracledb==26.0.1
 
 # --- LLM local / embeddings ---
 ollama==0.3.3

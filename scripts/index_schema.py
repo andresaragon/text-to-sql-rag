@@ -14,7 +14,8 @@ Uso previsto:
 import re
 from pathlib import Path
 
-from app.core.db import execute_select, save_schema_embedding
+from app.config import settings
+from app.core.db import clear_schema_embeddings, save_schema_embedding
 from app.core.embeddings import embed_batch
 
 SCHEMA_DOCS_DIR = Path(__file__).parent.parent / "data" / "schema_docs"
@@ -23,15 +24,17 @@ _TABLE_HEADING_PREFIX = "Tabla: "
 _EXAMPLES_HEADING_PREFIX = "Ejemplo de pregunta"
 
 
-def load_schema_fragments() -> list[dict]:
+def load_schema_fragments(dialect: str | None = None) -> list[dict]:
     """
-    Lee data/schema_docs/tables.md y lo parte en fragmentos indexables.
+    Lee data/schema_docs/tables.md (o tables_oracle.md) y lo parte en fragmentos indexables.
 
     Cada heading "## Tabla: X" es un fragmento (object_type "table"). El
     heading de ejemplos few-shot se sub-parte por cada "Pregunta:" en
     fragmentos individuales (object_type "example_query").
     """
-    text = (SCHEMA_DOCS_DIR / "tables.md").read_text(encoding="utf-8")
+    target = (dialect or settings.target_dialect).strip().lower()
+    filename = "tables_oracle.md" if target == "oracle" else "tables.md"
+    text = (SCHEMA_DOCS_DIR / filename).read_text(encoding="utf-8")
     sections = re.split(r"(?m)^## ", text)[1:]  # descarta el título "# ..." inicial
 
     fragments = []
@@ -51,7 +54,7 @@ def load_schema_fragments() -> list[dict]:
         elif heading.startswith(_EXAMPLES_HEADING_PREFIX):
             fragments.extend(_split_examples(body))
         else:
-            raise ValueError(f"Heading no reconocido en tables.md: {heading!r}")
+            raise ValueError(f"Heading no reconocido en {filename}: {heading!r}")
 
     return fragments
 
@@ -70,12 +73,12 @@ def _split_examples(body: str) -> list[dict]:
 
 
 def main():
-    fragments = load_schema_fragments()
+    fragments = load_schema_fragments(settings.target_dialect)
     descriptions = [f["description"] for f in fragments]
     embeddings = embed_batch(descriptions)
 
-    deleted = execute_select("DELETE FROM schema_embeddings RETURNING id")
-    print(f"Borrados {len(deleted)} fragmentos previos de schema_embeddings.")
+    deleted = clear_schema_embeddings()
+    print(f"Borrados {deleted} fragmentos previos de schema_embeddings.")
 
     for fragment, embedding in zip(fragments, embeddings):
         save_schema_embedding(

@@ -1,10 +1,15 @@
 """
-Maneja la conexión a PostgreSQL y la ejecución segura de queries,
+Maneja la conexión a PostgreSQL y Oracle, y la ejecución segura de queries,
 incluyendo timeout de ejecución (settings.query_timeout_seconds).
 """
 
+import re
+import time
+from typing import Any
+
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import bindparam, create_engine, text
+from sqlalchemy import bindparam, create_engine, event, text
+from sqlalchemy.engine import Engine
 from sqlalchemy.exc import DBAPIError, OperationalError
 
 from app.config import settings
@@ -30,6 +35,27 @@ _QUERY_CANCELED_SQLSTATE = "57014"
 # perdió la conexión), así que también cuenta como base no disponible.
 _UNAVAILABLE_SQLSTATE_PREFIXES = ("08", "53", "57P01", "57P02", "57P03")
 
+_ORACLE_SCHEMA_REGEX = re.compile(r"^[A-Za-z][A-Za-z0-9_$#]*$")
+_ORACLE_UNAVAILABLE_CODES = {
+    "ORA-01017",
+    "ORA-01033",
+    "ORA-01034",
+    "ORA-01089",
+    "ORA-03113",
+    "ORA-03114",
+    "ORA-03135",
+    "ORA-12154",
+    "ORA-12170",
+    "ORA-12514",
+    "ORA-12516",
+    "ORA-12519",
+    "ORA-12537",
+    "ORA-12541",
+    "DPY-4011",
+}
+
+_cached_target_engine: Engine | None = None
+
 
 class QueryTimeoutError(Exception):
     """La consulta excedió settings.query_timeout_seconds y fue cancelada."""
@@ -40,7 +66,104 @@ class QueryExecutionError(Exception):
 
 
 class DatabaseUnavailableError(Exception):
-    """Postgres no responde, cortó la conexión o no acepta más conexiones."""
+    """Postgres u Oracle no responde, cortó la conexión o no acepta más conexiones."""
+
+
+def _target_engine() -> Engine:
+    """Devuelve el engine donde se ejecuta el SQL generado, cacheado."""
+    global _cached_target_engine
+    if _cached_target_engine is not None:
+        return _cached_target_engine
+
+    dialect = settings.target_dialect.strip().lower()
+    if (
+        dialect == "postgres"
+        and settings.target_database_url == settings.database_url
+    ):
+        _cached_target_engine = _engine
+        return _engine
+
+    if dialect == "oracle":
+        schema = settings.allowed_schema
+        if (schema is None or schema.strip().lower() != "public") and (
+            not schema or not _ORACLE_SCHEMA_REGEX.match(schema)
+        ):
+            raise ValueError(f"Invalid allowed_schema for Oracle: {schema!r}")
+
+        engine = create_engine(
+            settings.target_database_url,
+            pool_pre_ping=True,
+            pool_size=settings.db_pool_size,
+            max_overflow=settings.db_max_overflow,
+            pool_timeout=settings.db_pool_timeout_seconds,
+            connect_args={"tcp_connect_timeout": settings.db_connect_timeout_seconds},
+        )
+
+        @event.listens_for(engine, "connect")
+        def _on_oracle_connect(dbapi_connection: Any, connection_record: Any) -> None:
+            dbapi_connection.call_timeout = int(settings.query_timeout_seconds * 1000)
+            current_schema = settings.allowed_schema
+            if current_schema and current_schema.strip().lower() != "public":
+                cursor = dbapi_connection.cursor()
+                try:
+                    cursor.execute(f"ALTER SESSION SET CURRENT_SCHEMA = {current_schema}")
+                finally:
+                    cursor.close()
+
+        _cached_target_engine = engine
+        return engine
+
+    _cached_target_engine = create_engine(
+        settings.target_database_url,
+        pool_pre_ping=True,
+        pool_size=settings.db_pool_size,
+        max_overflow=settings.db_max_overflow,
+        pool_timeout=settings.db_pool_timeout_seconds,
+        connect_args={"connect_timeout": settings.db_connect_timeout_seconds},
+    )
+    return _cached_target_engine
+
+
+def reset_target_engine() -> None:
+    """Descarta el engine cacheado (y lo cierra con dispose())."""
+    global _cached_target_engine
+    if _cached_target_engine is not None:
+        if _cached_target_engine is not _engine:
+            _cached_target_engine.dispose()
+        _cached_target_engine = None
+
+
+def map_oracle_error(exc: Exception) -> Exception:
+    """Mapea una excepción de SQLAlchemy o de oracledb a la excepción correspondiente."""
+    orig = getattr(exc, "orig", exc)
+    code = None
+    if hasattr(orig, "args") and len(orig.args) > 0:
+        first_arg = orig.args[0]
+        if hasattr(first_arg, "full_code"):
+            code = first_arg.full_code
+    if code is None and hasattr(orig, "full_code"):
+        code = orig.full_code
+
+    if code == "DPY-4024":
+        return QueryTimeoutError("La consulta tardó demasiado, intenta ser más específico.")
+
+    if code in _ORACLE_UNAVAILABLE_CODES or (isinstance(code, str) and code.startswith("DPY-6")):
+        return DatabaseUnavailableError("Base de datos no disponible.")
+
+    mensaje = None
+    if hasattr(orig, "args") and len(orig.args) > 0 and hasattr(orig.args[0], "message"):
+        mensaje = orig.args[0].message
+    if not mensaje:
+        mensaje = str(orig) if orig is not None else str(exc)
+
+    return QueryExecutionError(f"No se pudo ejecutar la consulta: {mensaje}")
+
+
+def clear_schema_embeddings() -> int:
+    """Borra todas las filas de schema_embeddings usando siempre _engine (Postgres)."""
+    with _engine.begin() as conn:
+        result = conn.execute(text("DELETE FROM schema_embeddings"))
+        return result.rowcount
 
 
 def _is_unavailable(exc: OperationalError) -> bool:
@@ -52,6 +175,31 @@ def _is_unavailable(exc: OperationalError) -> bool:
 
 def execute_select(sql: str) -> list[dict]:
     """Ejecuta un SELECT ya validado y devuelve las filas como lista de dicts."""
+    if settings.target_dialect.strip().lower() == "oracle":
+        max_retries = 5
+        for attempt in range(max_retries + 1):
+            try:
+                engine = _target_engine()
+                with engine.connect() as conn, conn.begin():
+                    conn.exec_driver_sql("SET TRANSACTION READ ONLY")
+                    result = conn.execute(text(sql))
+                    return [{str(k).lower(): v for k, v in row.items()} for row in result.mappings()]
+            except DBAPIError as exc:
+                orig = getattr(exc, "orig", exc)
+                code = None
+                if hasattr(orig, "args") and len(orig.args) > 0:
+                    first_arg = orig.args[0]
+                    if hasattr(first_arg, "full_code"):
+                        code = first_arg.full_code
+                if code is None and hasattr(orig, "full_code"):
+                    code = orig.full_code
+
+                if code == "ORA-01466" and attempt < max_retries:
+                    time.sleep(1)
+                    continue
+                mapped = map_oracle_error(exc)
+                raise mapped from exc
+
     try:
         with _engine.connect() as conn, conn.begin():
             conn.execute(

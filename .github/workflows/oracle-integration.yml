@@ -1,0 +1,41 @@
+name: Oracle Integration
+
+on:
+  workflow_dispatch:
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      - name: Install CPU-only PyTorch
+        run: pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Start Oracle container
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.oracle.yml up -d --wait --wait-timeout 300 oracle
+
+      - name: Run Oracle integration tests
+        run: |
+          ORACLE_INTEGRATION=1 pytest -q tests/integration
+
+      - name: Tear down Oracle container
+        if: always()
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.oracle.yml down -v

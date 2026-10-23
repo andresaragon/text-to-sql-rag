@@ -74,7 +74,7 @@ Rather than fragile regex pattern matching, [`app/core/safety.py`](app/core/safe
   - If present but exceeds safety thresholds, clamps it to the maximum allowable limit.
   - Safely handles non-integer or malformed limits (`LIMIT ALL`, expressions) by falling back to safe limits.
 * **Engine-Level Timeouts:** Automatically sets `statement_timeout = 5000` (5s) per session to eliminate unindexed full-table runaway queries.
-* **Oracle dialect (`TARGET_DIALECT=oracle`, validation only):** the same firewall applies Oracle-specific rules (package-qualified calls, sequences, information/XML functions, db links, table functions, hints, `FETCH PERCENT`/`WITH TIES`, bind variables). See the threat table in [docs/oracle-firewall.md](docs/oracle-firewall.md). Executing queries against Oracle (driver, timeouts) is not implemented yet; for now only Oracle SQL is validated.
+* **Oracle dialect (`TARGET_DIALECT=oracle`):** the firewall applies Oracle-specific rules (package-qualified calls, sequences, information/XML functions, db links, table functions, hints, `FETCH PERCENT`/`WITH TIES`, bind variables) and safely executes validated queries against the target Oracle database in read-only transactions with enforced `call_timeout`. See [docs/oracle-firewall.md](docs/oracle-firewall.md).
 
 ---
 
@@ -116,6 +116,24 @@ curl -X POST "http://localhost:8000/query" \
 The first question after startup can take about 40 seconds while Ollama loads the model (measured on an RTX 4060); later questions usually respond in seconds. If the LLM is unavailable, the API returns `503`.
 
 > **Ollama from Docker:** On Docker Desktop for Windows and macOS, `host.docker.internal` reaches Ollama on the host. On native Linux, start host Ollama listening on all interfaces with `OLLAMA_HOST=0.0.0.0 ollama serve`, or use the optional Compose profile: `docker compose --profile ollama up -d` and `docker compose exec ollama ollama pull sqlcoder`; with that profile, set `OLLAMA_HOST=http://ollama:11434`. Docker Compose reads `OLLAMA_HOST` from the environment.
+
+### Run against Oracle
+
+To run the application with an Oracle Free 23.26.3 database as the target execution engine (while keeping PostgreSQL for RAG embeddings):
+
+> **Resource requirement & License:** The Oracle Free container image (`gvenzl/oracle-free:23.26.3-slim-faststart`) requires approximately **4 GB** of RAM and ~6.5 GB of disk space. Note that downloading the Oracle image is subject to Oracle's Free Use Terms and Conditions.
+
+Start the stack with the Oracle Compose override:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.oracle.yml up -d
+```
+
+This starts:
+- PostgreSQL + pgvector for schema embeddings.
+- Oracle Free 23.26.3 configured with the `SALES` schema (owner) and an unprivileged `APP_RO` read-only user.
+- The schema indexer targeting Oracle schema documents.
+- The FastAPI application with `TARGET_DIALECT=oracle` and `TARGET_DATABASE_URL` pointing to Oracle.
 
 ### Option B: Manual setup
 
