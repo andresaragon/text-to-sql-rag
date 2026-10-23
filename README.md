@@ -74,6 +74,7 @@ Rather than fragile regex pattern matching, [`app/core/safety.py`](app/core/safe
   - If present but exceeds safety thresholds, clamps it to the maximum allowable limit.
   - Safely handles non-integer or malformed limits (`LIMIT ALL`, expressions) by falling back to safe limits.
 * **Engine-Level Timeouts:** Automatically sets `statement_timeout = 5000` (5s) per session to eliminate unindexed full-table runaway queries.
+* **Oracle dialect (`TARGET_DIALECT=oracle`, validation only):** the same firewall applies Oracle-specific rules (package-qualified calls, sequences, information/XML functions, db links, table functions, hints, `FETCH PERCENT`/`WITH TIES`, bind variables). See the threat table in [docs/oracle-firewall.md](docs/oracle-firewall.md). Executing queries against Oracle (driver, timeouts) is not implemented yet; for now only Oracle SQL is validated.
 
 ---
 
@@ -173,6 +174,7 @@ The application is configured using environment variables (or a `.env` file):
 | `EMBEDDING_MODEL` | `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` | SentenceTransformer model used for embeddings. |
 | `MAX_ROWS_RETURNED` | `100` | Maximum rows allowed in SELECT queries (clamped by AST safety guardrails). |
 | `ALLOWED_SCHEMA` | `public` | Only schema allowed for schema-qualified table names (`schema.table`); unqualified names are not affected. Case-insensitive. |
+| `TARGET_DIALECT` | `postgres` | SQL dialect used by the firewall: `postgres` or `oracle` (case-insensitive). With `oracle` only SQL is validated; executing queries against Oracle (driver, timeouts) is not implemented yet. See [docs/oracle-firewall.md](docs/oracle-firewall.md). |
 | `QUERY_TIMEOUT_SECONDS` | `5` | Query execution timeout in seconds. |
 
 ---
