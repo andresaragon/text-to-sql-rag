@@ -156,6 +156,7 @@ La aplicación se configura mediante variables de entorno (o archivo `.env`):
 | `OLLAMA_MODEL` | `sqlcoder` | Modelo LLM utilizado para generación de SQL. |
 | `EMBEDDING_MODEL` | `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` | Modelo SentenceTransformer para embeddings de esquema. |
 | `MAX_ROWS_RETURNED` | `100` | Límite máximo de filas permitidas por consulta (forzado por guardrail AST). |
+| `ALLOWED_SCHEMA` | `public` | Único esquema permitido para tablas calificadas (`esquema.tabla`); los nombres sin calificar no se ven afectados. No distingue mayúsculas. |
 | `QUERY_TIMEOUT_SECONDS` | `5` | Timeout de ejecución de la query en Postgres (segundos). |
 
 ---
@@ -191,6 +192,7 @@ En su lugar, **`app/core/safety.py` descompone la consulta en un Árbol de Sinta
 2. **Inspección de nodo raíz:** Garantiza que el statement sea estrictamente una expresión `exp.Select`.
 3. **Clamping de filas (`LIMIT`):** Si la consulta no tiene `LIMIT`, se le inyecta automáticamente. Si solicita más filas que el máximo configurado, se recorta a dicho tope.
 4. **Timeouts en motor:** Inyección de `statement_timeout` para neutralizar consultas desbocadas o scans completos en tablas masivas.
+5. **Lista blanca de tablas y esquema:** Las tablas sin calificar se validan contra la lista blanca. Las tablas calificadas (`esquema.tabla`) solo se permiten si el esquema es `ALLOWED_SCHEMA` (por defecto `public`, sin distinguir mayúsculas); los nombres de 3 partes (`catálogo.esquema.tabla`) se rechazan siempre.
 
 ---
 

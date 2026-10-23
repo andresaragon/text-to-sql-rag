@@ -6,7 +6,8 @@ Reglas duras de seguridad:
 1. Solo se permite una única sentencia SELECT (o WITH ... SELECT).
 2. Prohibido: INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE, GRANT, cualquier DDL/DML.
 3. Se debe poder parsear con sqlglot en dialecto postgres (si no parsea, se rechaza).
-4. Lista blanca de tablas: solo se permiten tablas de negocio autorizadas.
+4. Lista blanca de tablas y esquema: solo se permiten tablas autorizadas sin calificar
+   o en el esquema configurado; las referencias con catálogo se rechazan.
    Bloquea acceso a catálogos del sistema (pg_shadow, pg_authid, information_schema, etc.)
    y tablas internas del sistema RAG (schema_embeddings).
 5. Lista negra de funciones peligrosas: bloquea funciones de exfiltración o DoS (pg_sleep,
@@ -23,6 +24,8 @@ corrección semántica de si un filtro literal responde a la pregunta de negocio
 
 import sqlglot
 from sqlglot import exp
+
+from app.config import settings
 
 DEFAULT_ALLOWED_TABLES: set[str] = {
     "customers",
@@ -107,26 +110,25 @@ def is_safe_select(sql: str) -> bool:
 
 
 
-def extract_tables(statement: exp.Expression) -> set[str]:
-    """
-    Extrae los nombres de tablas físicas reales del AST, descontando
-    los identificadores de CTEs (Common Table Expressions) declaradas en la query.
-    """
-    cte_names = {cte.alias.lower() for cte in statement.find_all(exp.CTE) if cte.alias}
-
-    tables = set()
-    for table_expr in statement.find_all(exp.Table):
-        table_name = table_expr.name.lower()
-        if table_name and table_name not in cte_names:
-            tables.add(table_name)
-
-    return tables
-
-
-def check_table_whitelist(statement: exp.Expression, allowed_tables: set[str]) -> None:
+def check_table_whitelist(statement: exp.Expression, allowed_tables: set[str], allowed_schema: str) -> None:
     """Verifica que todas las tablas referenciadas en el AST pertenezcan a la lista blanca."""
-    tables_in_query = extract_tables(statement)
-    unauthorized = tables_in_query - {t.lower() for t in allowed_tables}
+    cte_names = {cte.alias.lower() for cte in statement.find_all(exp.CTE) if cte.alias}
+    allowed_names = {t.lower() for t in allowed_tables}
+    unauthorized = set()
+    for table in statement.find_all(exp.Table):
+        name = (table.name or "").lower()
+        # Las funciones de tabla (generate_series, pg_read_file...) aparecen como Table sin
+        # nombre: no son tablas físicas y las revisa check_dangerous_functions.
+        if not name:
+            continue
+        # Catálogos (a.b.c) no se permiten, incluso si coinciden los otros componentes.
+        if table.catalog:
+            unauthorized.add(name)
+            continue
+        if not table.db and name in cte_names:
+            continue
+        if name not in allowed_names or (table.db and table.db.lower() != allowed_schema.lower()):
+            unauthorized.add(name)
     if unauthorized:
         raise TableNotAllowedError(
             f"Acceso denegado a tablas no autorizadas: {sorted(unauthorized)}. "
@@ -171,7 +173,7 @@ def check_offset_limit(statement: exp.Expression) -> None:
             raise UnsafeQueryError(f"OFFSET excede el máximo permitido ({MAX_OFFSET})")
 
 
-def validate_ast(sql: str, allowed_tables: set[str] | None = None) -> exp.Select:
+def validate_ast(sql: str, allowed_tables: set[str] | None = None, allowed_schema: str | None = None) -> exp.Select:
     """
     Parsea y valida el AST de la consulta contra todas las reglas del cortafuegos semántico.
     Devuelve el objeto AST parseado si pasa todas las validaciones.
@@ -181,6 +183,8 @@ def validate_ast(sql: str, allowed_tables: set[str] | None = None) -> exp.Select
 
     if allowed_tables is None:
         allowed_tables = DEFAULT_ALLOWED_TABLES
+    if allowed_schema is None:
+        allowed_schema = settings.allowed_schema
 
     try:
         statements = [s for s in sqlglot.parse(sql, dialect="postgres") if s is not None]
@@ -209,7 +213,7 @@ def validate_ast(sql: str, allowed_tables: set[str] | None = None) -> exp.Select
                     "Solo se permiten consultas de solo lectura: se detectó SELECT INTO"
                 )
 
-        check_table_whitelist(statement, allowed_tables)
+        check_table_whitelist(statement, allowed_tables, allowed_schema)
         check_dangerous_functions(statement)
         check_offset_limit(statement)
     except UnsafeQueryError:
@@ -240,10 +244,10 @@ def enforce_limit(sql: str, max_rows: int) -> str:
 
 
 def validate_and_prepare(
-    sql: str, max_rows: int, allowed_tables: set[str] | None = None
+    sql: str, max_rows: int, allowed_tables: set[str] | None = None, allowed_schema: str | None = None
 ) -> str:
     """Punto de entrada único: valida el AST contra el cortafuegos y aplica el límite seguro."""
-    statement = validate_ast(sql, allowed_tables)
+    statement = validate_ast(sql, allowed_tables, allowed_schema)
     try:
         return enforce_limit(statement.sql(dialect="postgres"), max_rows)
     except UnsafeQueryError:
