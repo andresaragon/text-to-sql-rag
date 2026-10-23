@@ -66,7 +66,7 @@ Rather than fragile regex pattern matching, [`app/core/safety.py`](app/core/safe
 
 * **Strict Single Statement Check:** Rejects multiple semicolons and stacked statements (e.g., `SELECT 1; DROP TABLE users;`).
 * **Root Expression Verification:** Confirms the root node is strictly `exp.Select` or `exp.Union`. Any `INSERT`, `UPDATE`, `DELETE`, `DROP`, `ALTER`, or `TRUNCATE` operations trigger an immediate `NonSelectQueryError`.
-* **Table Whitelist Enforcement:** Restricts execution strictly to authorized business domain tables (`customers`, `invoices`, `payments`, `collection_actions`). Rejects attempts to access system catalogs (`pg_shadow`, `pg_authid`, `information_schema`) or internal RAG metadata (`schema_embeddings`) with `TableNotAllowedError`.
+* **Table Whitelist Enforcement:** Restricts execution strictly to authorized business domain tables (`customers`, `invoices`, `payments`, `collection_actions`). Rejects attempts to access system catalogs (`pg_shadow`, `pg_authid`, `information_schema`) or internal RAG metadata (`schema_embeddings`) with `TableNotAllowedError`. The schema is validated too: unqualified table names pass, schema-qualified names (`schema.table`) pass only when the schema equals `ALLOWED_SCHEMA` (default `public`, case-insensitive), and three-part names (`catalog.schema.table`) are always rejected.
 * **CTE Resolution:** Accurately discounts Common Table Expression names (`WITH ... AS (...)`) from physical table checks to allow advanced analytics without false positives.
 * **Dangerous Function Blacklist:** Blocks time-based blind SQLi (`pg_sleep`), server-side exfiltration (`pg_read_file`, `query_to_xml`), and lateral movement (`dblink`) with `DangerousFunctionError`.
 * **Row-Count Clamping:** Inspects the AST for existing `LIMIT` clauses:
@@ -172,6 +172,7 @@ The application is configured using environment variables (or a `.env` file):
 | `OLLAMA_MODEL` | `sqlcoder` | LLM model name used for SQL generation. |
 | `EMBEDDING_MODEL` | `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` | SentenceTransformer model used for embeddings. |
 | `MAX_ROWS_RETURNED` | `100` | Maximum rows allowed in SELECT queries (clamped by AST safety guardrails). |
+| `ALLOWED_SCHEMA` | `public` | Only schema allowed for schema-qualified table names (`schema.table`); unqualified names are not affected. Case-insensitive. |
 | `QUERY_TIMEOUT_SECONDS` | `5` | Query execution timeout in seconds. |
 
 ---
