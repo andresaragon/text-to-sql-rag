@@ -1,0 +1,367 @@
+{
+  "version": 1,
+  "reference_date": "2026-10-01",
+  "nota": "Preguntas y SQL de referencia redactados por el autor del proyecto (no por un tercero). Las fechas son explícitas: ninguna depende de 'hoy'. 'original_question' enlaza con scripts/questions.py.",
+  "questions": [
+    {
+      "id": "q01",
+      "question": "¿Cuántos clientes hay registrados?",
+      "category": "conteo",
+      "difficulty": "facil",
+      "ordered": false,
+      "original_question": null,
+      "sql": {
+        "postgres": "SELECT COUNT(*) FROM customers",
+        "oracle": "SELECT COUNT(*) FROM customers"
+      }
+    },
+    {
+      "id": "q02",
+      "question": "¿Cuántas facturas están vencidas?",
+      "category": "conteo",
+      "difficulty": "facil",
+      "ordered": false,
+      "original_question": null,
+      "sql": {
+        "postgres": "SELECT COUNT(*) FROM invoices WHERE status = 'overdue'",
+        "oracle": "SELECT COUNT(*) FROM invoices WHERE status = 'overdue'"
+      }
+    },
+    {
+      "id": "q03",
+      "question": "¿Cuántos clientes son de Colombia?",
+      "category": "conteo",
+      "difficulty": "facil",
+      "ordered": false,
+      "original_question": null,
+      "sql": {
+        "postgres": "SELECT COUNT(*) FROM customers WHERE country = 'Colombia'",
+        "oracle": "SELECT COUNT(*) FROM customers WHERE country = 'Colombia'"
+      }
+    },
+    {
+      "id": "q04",
+      "question": "¿Cuál es el monto total facturado en USD?",
+      "category": "agregacion",
+      "difficulty": "facil",
+      "ordered": false,
+      "original_question": null,
+      "sql": {
+        "postgres": "SELECT SUM(amount) FROM invoices WHERE currency = 'USD'",
+        "oracle": "SELECT SUM(amount) FROM invoices WHERE currency = 'USD'"
+      }
+    },
+    {
+      "id": "q05",
+      "question": "¿Cuántas facturas están pendientes de pago?",
+      "category": "conteo",
+      "difficulty": "facil",
+      "ordered": false,
+      "original_question": 3,
+      "sql": {
+        "postgres": "SELECT COUNT(*) FROM invoices WHERE status = 'pending'",
+        "oracle": "SELECT COUNT(*) FROM invoices WHERE status = 'pending'"
+      }
+    },
+    {
+      "id": "q06",
+      "question": "¿Cuántas facturas se emitieron en julio de 2026?",
+      "category": "fechas",
+      "difficulty": "facil",
+      "ordered": false,
+      "original_question": null,
+      "sql": {
+        "postgres": "SELECT COUNT(*) FROM invoices WHERE issued_date >= DATE '2026-07-01' AND issued_date < DATE '2026-08-01'",
+        "oracle": "SELECT COUNT(*) FROM invoices WHERE issued_date >= DATE '2026-07-01' AND issued_date < DATE '2026-08-01'"
+      }
+    },
+    {
+      "id": "q07",
+      "question": "¿Cuántas facturas vencen entre el 1 y el 31 de octubre de 2026?",
+      "category": "fechas",
+      "difficulty": "facil",
+      "ordered": false,
+      "original_question": null,
+      "sql": {
+        "postgres": "SELECT COUNT(*) FROM invoices WHERE due_date >= DATE '2026-10-01' AND due_date <= DATE '2026-10-31'",
+        "oracle": "SELECT COUNT(*) FROM invoices WHERE due_date >= DATE '2026-10-01' AND due_date <= DATE '2026-10-31'"
+      }
+    },
+    {
+      "id": "q08",
+      "question": "¿Cuántos clientes se registraron durante 2025?",
+      "category": "fechas",
+      "difficulty": "media",
+      "ordered": false,
+      "original_question": null,
+      "sql": {
+        "postgres": "SELECT COUNT(*) FROM customers WHERE created_at >= TIMESTAMP '2025-01-01 00:00:00' AND created_at < TIMESTAMP '2026-01-01 00:00:00'",
+        "oracle": "SELECT COUNT(*) FROM customers WHERE created_at >= TIMESTAMP '2025-01-01 00:00:00' AND created_at < TIMESTAMP '2026-01-01 00:00:00'"
+      }
+    },
+    {
+      "id": "q09",
+      "question": "¿Cuáles son los 5 clientes con mayor monto total pagado?",
+      "category": "top-n",
+      "difficulty": "media",
+      "ordered": true,
+      "original_question": 2,
+      "sql": {
+        "postgres": "SELECT c.full_name, SUM(p.amount_paid) AS total_paid FROM customers c JOIN invoices i ON i.customer_id = c.customer_id JOIN payments p ON p.invoice_id = i.invoice_id GROUP BY c.full_name ORDER BY total_paid DESC, c.full_name LIMIT 5",
+        "oracle": "SELECT c.full_name, SUM(p.amount_paid) AS total_paid FROM customers c JOIN invoices i ON i.customer_id = c.customer_id JOIN payments p ON p.invoice_id = i.invoice_id GROUP BY c.full_name ORDER BY total_paid DESC, c.full_name FETCH FIRST 5 ROWS ONLY"
+      }
+    },
+    {
+      "id": "q10",
+      "question": "¿Cuáles son los 10 clientes con mayor monto de facturas vencidas?",
+      "category": "top-n",
+      "difficulty": "media",
+      "ordered": true,
+      "original_question": 4,
+      "sql": {
+        "postgres": "SELECT c.full_name, SUM(i.amount) AS overdue_amount FROM customers c JOIN invoices i ON i.customer_id = c.customer_id WHERE i.status = 'overdue' GROUP BY c.full_name ORDER BY overdue_amount DESC, c.full_name LIMIT 10",
+        "oracle": "SELECT c.full_name, SUM(i.amount) AS overdue_amount FROM customers c JOIN invoices i ON i.customer_id = c.customer_id WHERE i.status = 'overdue' GROUP BY c.full_name ORDER BY overdue_amount DESC, c.full_name FETCH FIRST 10 ROWS ONLY"
+      }
+    },
+    {
+      "id": "q11",
+      "question": "¿Cuántas acciones de cobranza se han hecho sobre facturas vencidas, por tipo de acción?",
+      "category": "join",
+      "difficulty": "media",
+      "ordered": false,
+      "original_question": 5,
+      "sql": {
+        "postgres": "SELECT ca.action_type, COUNT(*) AS total FROM collection_actions ca JOIN invoices i ON i.invoice_id = ca.invoice_id WHERE i.status = 'overdue' GROUP BY ca.action_type",
+        "oracle": "SELECT ca.action_type, COUNT(*) AS total FROM collection_actions ca JOIN invoices i ON i.invoice_id = ca.invoice_id WHERE i.status = 'overdue' GROUP BY ca.action_type"
+      }
+    },
+    {
+      "id": "q12",
+      "question": "¿Cuál es el método de pago más utilizado?",
+      "category": "top-n",
+      "difficulty": "media",
+      "ordered": false,
+      "original_question": 10,
+      "sql": {
+        "postgres": "SELECT payment_method FROM payments GROUP BY payment_method ORDER BY COUNT(*) DESC, payment_method LIMIT 1",
+        "oracle": "SELECT payment_method FROM payments GROUP BY payment_method ORDER BY COUNT(*) DESC, payment_method FETCH FIRST 1 ROWS ONLY"
+      }
+    },
+    {
+      "id": "q13",
+      "question": "¿Cuántos pagos se registraron con cada método de pago?",
+      "category": "agrupacion",
+      "difficulty": "facil",
+      "ordered": false,
+      "original_question": null,
+      "sql": {
+        "postgres": "SELECT payment_method, COUNT(*) AS total FROM payments GROUP BY payment_method",
+        "oracle": "SELECT payment_method, COUNT(*) AS total FROM payments GROUP BY payment_method"
+      }
+    },
+    {
+      "id": "q14",
+      "question": "¿Cuál es el país con más clientes?",
+      "category": "top-n",
+      "difficulty": "media",
+      "ordered": false,
+      "original_question": null,
+      "sql": {
+        "postgres": "SELECT country FROM customers GROUP BY country ORDER BY COUNT(*) DESC, country LIMIT 1",
+        "oracle": "SELECT country FROM customers GROUP BY country ORDER BY COUNT(*) DESC, country FETCH FIRST 1 ROWS ONLY"
+      }
+    },
+    {
+      "id": "q15",
+      "question": "¿Cuánto suman las facturas vencidas de cada país?",
+      "category": "join",
+      "difficulty": "media",
+      "ordered": false,
+      "original_question": null,
+      "sql": {
+        "postgres": "SELECT c.country, SUM(i.amount) AS overdue_amount FROM customers c JOIN invoices i ON i.customer_id = c.customer_id WHERE i.status = 'overdue' GROUP BY c.country",
+        "oracle": "SELECT c.country, SUM(i.amount) AS overdue_amount FROM customers c JOIN invoices i ON i.customer_id = c.customer_id WHERE i.status = 'overdue' GROUP BY c.country"
+      }
+    },
+    {
+      "id": "q16",
+      "question": "¿Cuál es el promedio de días entre la emisión de una factura y su pago?",
+      "category": "fechas",
+      "difficulty": "dificil",
+      "ordered": false,
+      "original_question": 7,
+      "sql": {
+        "postgres": "SELECT AVG(p.paid_at::date - i.issued_date) AS avg_days FROM payments p JOIN invoices i ON i.invoice_id = p.invoice_id",
+        "oracle": "SELECT AVG(TRUNC(p.paid_at) - i.issued_date) AS avg_days FROM payments p JOIN invoices i ON i.invoice_id = p.invoice_id"
+      }
+    },
+    {
+      "id": "q17",
+      "question": "¿Cuál es el monto promedio de las facturas por moneda?",
+      "category": "agrupacion",
+      "difficulty": "facil",
+      "ordered": false,
+      "original_question": null,
+      "sql": {
+        "postgres": "SELECT currency, AVG(amount) AS avg_amount FROM invoices GROUP BY currency",
+        "oracle": "SELECT currency, AVG(amount) AS avg_amount FROM invoices GROUP BY currency"
+      }
+    },
+    {
+      "id": "q18",
+      "question": "¿Cuál es la factura de mayor monto y a qué cliente pertenece?",
+      "category": "top-n",
+      "difficulty": "media",
+      "ordered": true,
+      "original_question": null,
+      "sql": {
+        "postgres": "SELECT i.invoice_id, c.full_name, i.amount FROM invoices i JOIN customers c ON c.customer_id = i.customer_id ORDER BY i.amount DESC, i.invoice_id LIMIT 1",
+        "oracle": "SELECT i.invoice_id, c.full_name, i.amount FROM invoices i JOIN customers c ON c.customer_id = i.customer_id ORDER BY i.amount DESC, i.invoice_id FETCH FIRST 1 ROWS ONLY"
+      }
+    },
+    {
+      "id": "q19",
+      "question": "¿Cuántos clientes no han hecho ningún pago todavía?",
+      "category": "anti-join",
+      "difficulty": "dificil",
+      "ordered": false,
+      "original_question": 8,
+      "sql": {
+        "postgres": "SELECT COUNT(*) FROM customers c WHERE NOT EXISTS (SELECT 1 FROM invoices i JOIN payments p ON p.invoice_id = i.invoice_id WHERE i.customer_id = c.customer_id)",
+        "oracle": "SELECT COUNT(*) FROM customers c WHERE NOT EXISTS (SELECT 1 FROM invoices i JOIN payments p ON p.invoice_id = i.invoice_id WHERE i.customer_id = c.customer_id)"
+      }
+    },
+    {
+      "id": "q20",
+      "question": "¿Cuántos clientes no tienen ninguna factura?",
+      "category": "anti-join",
+      "difficulty": "media",
+      "ordered": false,
+      "original_question": null,
+      "sql": {
+        "postgres": "SELECT COUNT(*) FROM customers c WHERE NOT EXISTS (SELECT 1 FROM invoices i WHERE i.customer_id = c.customer_id)",
+        "oracle": "SELECT COUNT(*) FROM customers c WHERE NOT EXISTS (SELECT 1 FROM invoices i WHERE i.customer_id = c.customer_id)"
+      }
+    },
+    {
+      "id": "q21",
+      "question": "¿Cuántas facturas se emitieron en cada mes de 2026?",
+      "category": "fechas",
+      "difficulty": "dificil",
+      "ordered": true,
+      "original_question": 9,
+      "sql": {
+        "postgres": "SELECT DATE_TRUNC('month', issued_date) AS month, COUNT(*) AS total FROM invoices WHERE issued_date >= DATE '2026-01-01' AND issued_date < DATE '2027-01-01' GROUP BY DATE_TRUNC('month', issued_date) ORDER BY month",
+        "oracle": "SELECT TRUNC(issued_date, 'MM') AS month, COUNT(*) AS total FROM invoices WHERE issued_date >= DATE '2026-01-01' AND issued_date < DATE '2027-01-01' GROUP BY TRUNC(issued_date, 'MM') ORDER BY month"
+      }
+    },
+    {
+      "id": "q22",
+      "question": "¿Cuántas facturas tienen más de un pago registrado?",
+      "category": "subconsulta",
+      "difficulty": "media",
+      "ordered": false,
+      "original_question": 6,
+      "sql": {
+        "postgres": "SELECT COUNT(*) FROM (SELECT invoice_id FROM payments GROUP BY invoice_id HAVING COUNT(*) > 1) t",
+        "oracle": "SELECT COUNT(*) FROM (SELECT invoice_id FROM payments GROUP BY invoice_id HAVING COUNT(*) > 1) t"
+      }
+    },
+    {
+      "id": "q23",
+      "question": "¿Cuántas facturas vencidas tienen más de 60 días de atraso al 1 de octubre de 2026?",
+      "category": "fechas",
+      "difficulty": "dificil",
+      "ordered": false,
+      "original_question": 1,
+      "sql": {
+        "postgres": "SELECT COUNT(*) FROM invoices WHERE status = 'overdue' AND DATE '2026-10-01' - due_date > 60",
+        "oracle": "SELECT COUNT(*) FROM invoices WHERE status = 'overdue' AND DATE '2026-10-01' - due_date > 60"
+      }
+    },
+    {
+      "id": "q24",
+      "question": "¿Cuál es el cliente que más ha pagado en total?",
+      "category": "top-n",
+      "difficulty": "media",
+      "ordered": false,
+      "original_question": null,
+      "sql": {
+        "postgres": "SELECT c.full_name, SUM(p.amount_paid) AS total_paid FROM customers c JOIN invoices i ON i.customer_id = c.customer_id JOIN payments p ON p.invoice_id = i.invoice_id GROUP BY c.full_name ORDER BY total_paid DESC, c.full_name LIMIT 1",
+        "oracle": "SELECT c.full_name, SUM(p.amount_paid) AS total_paid FROM customers c JOIN invoices i ON i.customer_id = c.customer_id JOIN payments p ON p.invoice_id = i.invoice_id GROUP BY c.full_name ORDER BY total_paid DESC, c.full_name FETCH FIRST 1 ROWS ONLY"
+      }
+    },
+    {
+      "id": "q25",
+      "question": "¿Cuál es la mediana del monto de las facturas?",
+      "category": "estadistica",
+      "difficulty": "dificil",
+      "ordered": false,
+      "original_question": null,
+      "sql": {
+        "postgres": "SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY amount) FROM invoices",
+        "oracle": "SELECT MEDIAN(amount) FROM invoices"
+      }
+    },
+    {
+      "id": "q26",
+      "question": "¿Cuáles son los 3 clientes con mayor facturación total, incluyendo empates en el tercer lugar?",
+      "category": "ventana",
+      "difficulty": "dificil",
+      "ordered": true,
+      "original_question": null,
+      "sql": {
+        "postgres": "SELECT t.full_name, t.total FROM (SELECT c.full_name, SUM(i.amount) AS total, RANK() OVER (ORDER BY SUM(i.amount) DESC) AS r FROM customers c JOIN invoices i ON i.customer_id = c.customer_id GROUP BY c.full_name) t WHERE t.r <= 3 ORDER BY t.total DESC, t.full_name",
+        "oracle": "SELECT t.full_name, t.total FROM (SELECT c.full_name, SUM(i.amount) AS total, RANK() OVER (ORDER BY SUM(i.amount) DESC) AS r FROM customers c JOIN invoices i ON i.customer_id = c.customer_id GROUP BY c.full_name) t WHERE t.r <= 3 ORDER BY t.total DESC, t.full_name"
+      }
+    },
+    {
+      "id": "q27",
+      "question": "Lista los métodos de pago utilizados, separados por coma y en orden alfabético.",
+      "category": "texto",
+      "difficulty": "dificil",
+      "ordered": false,
+      "original_question": null,
+      "sql": {
+        "postgres": "SELECT STRING_AGG(DISTINCT payment_method, ', ' ORDER BY payment_method) FROM payments",
+        "oracle": "SELECT LISTAGG(DISTINCT payment_method, ', ') WITHIN GROUP (ORDER BY payment_method) FROM payments"
+      }
+    },
+    {
+      "id": "q28",
+      "question": "¿Qué porcentaje de las facturas está pagado? Redondea a dos decimales.",
+      "category": "agregacion",
+      "difficulty": "media",
+      "ordered": false,
+      "original_question": null,
+      "sql": {
+        "postgres": "SELECT ROUND(100.0 * SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) / COUNT(*), 2) FROM invoices",
+        "oracle": "SELECT ROUND(100.0 * SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) / COUNT(*), 2) FROM invoices"
+      }
+    },
+    {
+      "id": "q29",
+      "question": "Para los clientes con más de 10 facturas, ¿cuántas facturas vencidas tiene cada uno?",
+      "category": "join",
+      "difficulty": "dificil",
+      "ordered": false,
+      "original_question": null,
+      "sql": {
+        "postgres": "SELECT c.full_name, SUM(CASE WHEN i.status = 'overdue' THEN 1 ELSE 0 END) AS overdue_count FROM customers c JOIN invoices i ON i.customer_id = c.customer_id GROUP BY c.full_name HAVING COUNT(*) > 10",
+        "oracle": "SELECT c.full_name, SUM(CASE WHEN i.status = 'overdue' THEN 1 ELSE 0 END) AS overdue_count FROM customers c JOIN invoices i ON i.customer_id = c.customer_id GROUP BY c.full_name HAVING COUNT(*) > 10"
+      }
+    },
+    {
+      "id": "q30",
+      "question": "¿Cuántos clientes tienen más facturas vencidas que pagadas?",
+      "category": "subconsulta",
+      "difficulty": "dificil",
+      "ordered": false,
+      "original_question": null,
+      "sql": {
+        "postgres": "SELECT COUNT(*) FROM (SELECT customer_id FROM invoices GROUP BY customer_id HAVING SUM(CASE WHEN status = 'overdue' THEN 1 ELSE 0 END) > SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END)) t",
+        "oracle": "SELECT COUNT(*) FROM (SELECT customer_id FROM invoices GROUP BY customer_id HAVING SUM(CASE WHEN status = 'overdue' THEN 1 ELSE 0 END) > SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END)) t"
+      }
+    }
+  ]
+}
