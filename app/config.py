@@ -9,6 +9,11 @@ class Settings:
     database_url: str = os.getenv(
         "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/postgres"
     )
+    target_database_url: str = (
+        os.getenv("TARGET_DATABASE_URL")
+        if os.getenv("TARGET_DATABASE_URL") and os.getenv("TARGET_DATABASE_URL").strip()
+        else database_url
+    )
     ollama_host: str = os.getenv("OLLAMA_HOST", "http://localhost:11434")
     ollama_model: str = os.getenv("OLLAMA_MODEL", "sqlcoder")
     embedding_model: str = os.getenv(
@@ -18,7 +23,16 @@ class Settings:
     query_timeout_seconds: int = int(os.getenv("QUERY_TIMEOUT_SECONDS", "5"))
     max_question_chars: int = int(os.getenv("MAX_QUESTION_CHARS", "500"))
     allowed_schema: str = os.getenv("ALLOWED_SCHEMA", "public")
-    target_dialect: str = os.getenv("TARGET_DIALECT", "postgres")
+    _target_dialect: str = os.getenv("TARGET_DIALECT", "postgres")
+
+    @property
+    def target_dialect(self) -> str:
+        val = getattr(self, "_target_dialect", "postgres")
+        return val.strip().lower() if val else "postgres"
+
+    @target_dialect.setter
+    def target_dialect(self, value: str) -> None:
+        self._target_dialect = value
 
     db_pool_size: int = int(os.getenv("DB_POOL_SIZE", "5"))
     db_max_overflow: int = int(os.getenv("DB_MAX_OVERFLOW", "10"))

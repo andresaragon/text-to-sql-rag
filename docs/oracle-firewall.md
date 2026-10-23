@@ -8,7 +8,7 @@ TARGET_DIALECT=oracle   # default: postgres (case-insensitive; any other value i
 
 `validate_and_prepare`, `validate_ast` and `enforce_limit` also take a `dialect` argument. When it is `None`, the value of `settings.target_dialect` is used at call time. With `postgres` the behaviour is the same as before the Oracle rules were added.
 
-> **Status:** only Oracle SQL is validated. Executing queries against Oracle (driver, timeouts) is **not implemented yet**. Nothing in this project connects to an Oracle database.
+> **Status:** Oracle SQL validation and execution are supported. Queries validated by the firewall are executed against the target Oracle database using `oracledb` in thin mode with strict read-only transactions, timeouts, and error mapping.
 
 ## Threat table
 
@@ -43,6 +43,15 @@ In Oracle, `ALLOWED_SCHEMA` must be the **owner of the tables** (the schema that
 
 With the default value `public`, no Oracle schema-qualified name matches, so only unqualified table names are accepted (`test_oracle_qualified_names_need_an_explicit_schema`). Set `ALLOWED_SCHEMA` to the owner before you use qualified names.
 
+## Execution
+
+When `TARGET_DIALECT=oracle`, the query is executed against the target Oracle database using the `oracledb` driver in thin mode.
+
+- **Read-only transactions**: Before running the validated `SELECT`, the database connection explicitly runs `SET TRANSACTION READ ONLY` via `conn.exec_driver_sql(...)`. This guarantees that even if a connected account has write privileges, modification statements are rejected by Oracle with `ORA-01456`.
+- **Query timeouts via call_timeout**: Controlled via `call_timeout` (in milliseconds) on the DBAPI connection. When a query exceeds `settings.query_timeout_seconds`, Oracle terminates the call with `DPY-4024`, which is caught and mapped to `QueryTimeoutError`. The connection pool recovers cleanly and remains usable.
+- **Transitory errors (ORA-01466)**: In Oracle, reading tables in `SET TRANSACTION READ ONLY` that were created or modified seconds earlier may transiently raise `ORA-01466` ("table definition has changed"). `execute_select` automatically retries up to 5 times with `time.sleep(1)` before raising `QueryExecutionError`.
+- **Error mapping**: Oracle driver errors are parsed by `map_oracle_error`. Connection failures (`DPY-6xxx`, `DPY-4011`, `ORA-01017`, `ORA-12541`, etc.) map to `DatabaseUnavailableError` (sanitizing hosts, ports, and credentials). Query timeouts (`DPY-4024`) map to `QueryTimeoutError`. All other execution failures (`ORA-00942`, `ORA-00904`, etc.) map to `QueryExecutionError`.
+
 ## Limitations
 
 The firewall rejects SQL that the parser does not understand (fail-closed). These constructs fail to parse and are therefore rejected (`test_reject_non_select_and_unparseable`):
@@ -61,7 +70,7 @@ Rejecting them is deliberate. A query that does not parse cannot be checked, so 
 These were checked against the integrated code and are **allowed** today. Do not rely on the firewall alone for them:
 
 - **Unqualified user-defined functions** (`SELECT my_func(1) FROM customers`). sqlglot cannot tell them apart from about 25 standard Oracle functions it does not model (`REPLACE`, `INSTR`, `RANK`, `DENSE_RANK`, `MEDIAN`, `REGEXP_*`, `TRANSLATE`...). Both reach the AST as `exp.Anonymous`, so an allowlist would be long and would reject legitimate queries. A PL/SQL function in the connected schema can have side effects (for example `PRAGMA AUTONOMOUS_TRANSACTION`). Run the API with a **read-only account that owns no custom functions or packages and has no `EXECUTE` privileges**.
-- **Resource bombs that do not need a banned construct**: recursive CTEs, large Cartesian joins (`FROM customers a, customers b, customers c`). They need a statement timeout in the execution layer, which is not implemented for Oracle yet.
+- **Resource bombs that do not need a banned construct**: recursive CTEs, large Cartesian joins (`FROM customers a, customers b, customers c`). The driver's `call_timeout` ends them, but not always cleanly: with a 2 s timeout a recursive CTE ended after about 4 s with `DPY-4011` (the connection was closed and the API answered 503, "Base de datos no disponible."); with a 10 s timeout it ended with `DPY-4024` after about 11.5 s.
 - **`exp.Parameter` nodes** are rejected next to bind variables, but no test produces one with the Oracle dialect, so that line is not covered by a test.
 - Names that sqlglot spells differently from Oracle (for example whether a given built-in is parsed as a typed function or as `Anonymous`) can change between sqlglot versions. The suite pins `sqlglot==25.24.0`.
 

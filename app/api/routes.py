@@ -94,7 +94,7 @@ def query(request: QuestionRequest, response: Response) -> QueryResponse:
 
     t0 = time.perf_counter()
     try:
-        raw_sql = generate_sql(request.question, schema.context)
+        raw_sql = generate_sql(request.question, schema.context, settings.target_dialect)
     except (httpx.ConnectError, httpx.TimeoutException, ResponseError, ConnectionError) as exc:
         raise HTTPException(
             status_code=503, detail="Modelo de lenguaje no disponible."
@@ -103,7 +103,12 @@ def query(request: QuestionRequest, response: Response) -> QueryResponse:
 
     t0 = time.perf_counter()
     try:
-        safe_sql = validate_and_prepare(raw_sql, settings.max_rows_returned)
+        safe_sql = validate_and_prepare(
+            raw_sql,
+            settings.max_rows_returned,
+            dialect=settings.target_dialect,
+            allowed_schema=settings.allowed_schema,
+        )
     except UnsafeQueryError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     t_validate = (time.perf_counter() - t0) * 1000
