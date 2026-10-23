@@ -54,6 +54,13 @@ _ORACLE_UNAVAILABLE_CODES = {
     "DPY-4011",
 }
 
+# Formatos ISO para la sesión de Oracle. Con los valores por defecto (DD-MON-RR)
+# fallan TIMESTAMP '2026-01-01 00:00:00' (ORA-01843) y fecha >= '2026-07-01' (ORA-01861).
+ORACLE_SESSION_FORMATS = (
+    "ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD'",
+    "ALTER SESSION SET NLS_TIMESTAMP_FORMAT = 'YYYY-MM-DD HH24:MI:SS.FF'",
+)
+
 _cached_target_engine: Engine | None = None
 
 
@@ -102,13 +109,16 @@ def _target_engine() -> Engine:
         @event.listens_for(engine, "connect")
         def _on_oracle_connect(dbapi_connection: Any, connection_record: Any) -> None:
             dbapi_connection.call_timeout = int(settings.query_timeout_seconds * 1000)
+            statements = list(ORACLE_SESSION_FORMATS)
             current_schema = settings.allowed_schema
             if current_schema and current_schema.strip().lower() != "public":
-                cursor = dbapi_connection.cursor()
-                try:
-                    cursor.execute(f"ALTER SESSION SET CURRENT_SCHEMA = {current_schema}")
-                finally:
-                    cursor.close()
+                statements.append(f"ALTER SESSION SET CURRENT_SCHEMA = {current_schema}")
+            cursor = dbapi_connection.cursor()
+            try:
+                for statement in statements:
+                    cursor.execute(statement)
+            finally:
+                cursor.close()
 
         _cached_target_engine = engine
         return engine
