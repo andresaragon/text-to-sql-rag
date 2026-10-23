@@ -221,6 +221,7 @@ En su lugar, **`app/core/safety.py` descompone la consulta en un Árbol de Sinta
 - **Suite unitaria:** 413 pruebas que no necesitan servicios externos (ni Postgres ni Ollama). Corren en CI en cada push a `main` y en cada pull request.
 - **Suite adversarial del firewall:** 245 pruebas adversariales contra los guardrails AST de `sqlglot`.
 - **Benchmark con infraestructura real:** primera corrida contra Postgres + pgvector y Ollama reales (`sqlcoder`, RTX 4060). Informe completo: [`docs/benchmarks/2026-10-15.md`](docs/benchmarks/2026-10-15.md).
+- **Benchmark A/B, Postgres vs Oracle vs SQL transpilado:** 30 preguntas, dos modelos locales, los mismos datos en ambas bases; el modelo pesa mucho más que el dialecto y transpilar cuesta en las preguntas de fechas. Informe: [`docs/benchmarks/2026-10-23-ab.es.md`](docs/benchmarks/2026-10-23-ab.es.md).
 
 | Métrica | Antes | Después |
 |---|---|---|

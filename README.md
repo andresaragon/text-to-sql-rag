@@ -228,6 +228,7 @@ curl -X POST "http://localhost:8000/query" \
 - **Unit suite:** 413 tests that need no external services (no Postgres, no Ollama). They run in CI on pushes to `main` and on every pull request.
 - **Adversarial firewall suite:** 245 adversarial tests against the `sqlglot` AST guardrails.
 - **Benchmark with real infrastructure:** first run against real Postgres + pgvector and Ollama (`sqlcoder`, RTX 4060). Full report: [`docs/benchmarks/2026-10-15.md`](docs/benchmarks/2026-10-15.md).
+- **A/B benchmark, Postgres vs Oracle vs transpiled SQL:** 30 questions, two local models, identical data in both databases; the model matters far more than the dialect, and transpiling costs date questions. Report: [`docs/benchmarks/2026-10-23-ab.md`](docs/benchmarks/2026-10-23-ab.md).
 
 | Metric | Before | After |
 |---|---|---|

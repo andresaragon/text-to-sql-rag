@@ -1,0 +1,3422 @@
+[
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_direct",
+    "question_id": "q01",
+    "category": "conteo",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT COUNT(customer_id) AS total_customers FROM customers;",
+    "final_sql": "SELECT COUNT(customer_id) AS total_customers FROM customers LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 493.6237150031957,
+      "evaluate": 5.121467002027202
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_direct",
+    "question_id": "q02",
+    "category": "conteo",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT invoice_id, customer_id, amount, issued_date, due_date FROM invoices WHERE status = 'overdue';",
+    "final_sql": "SELECT invoice_id, customer_id, amount, issued_date, due_date FROM invoices WHERE status = 'overdue' LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 722.9110179978306,
+      "evaluate": 6.368310998368543
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_direct",
+    "question_id": "q03",
+    "category": "conteo",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT customers.full_name FROM customers WHERE customers.country = 'Colombia' ;",
+    "final_sql": "SELECT customers.full_name FROM customers WHERE customers.country = 'Colombia' LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 838.6847410001792,
+      "evaluate": 5.316364993632305
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_direct",
+    "question_id": "q04",
+    "category": "agregacion",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT SUM(i.amount) AS total_amount_in_usd FROM invoices i WHERE i.currency = 'USD';",
+    "final_sql": "SELECT SUM(i.amount) AS total_amount_in_usd FROM invoices AS i WHERE i.currency = 'USD' LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1026.959053997416,
+      "evaluate": 8.12746299925493
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_direct",
+    "question_id": "q05",
+    "category": "conteo",
+    "difficulty": "facil",
+    "original_question": 3,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT invoice_id, customer_id, amount, issued_date, due_date FROM invoices WHERE status = 'due';",
+    "final_sql": "SELECT invoice_id, customer_id, amount, issued_date, due_date FROM invoices WHERE status = 'due' LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 705.8626650032238,
+      "evaluate": 5.074120999779552
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_direct",
+    "question_id": "q06",
+    "category": "fechas",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT COUNT(*) AS total_invoices FROM invoices WHERE issued_date BETWEEN '2026-07-01' AND '2026-07-31' AND status IN ('paid', 'overdue');",
+    "final_sql": "SELECT COUNT(*) AS total_invoices FROM invoices WHERE issued_date BETWEEN '2026-07-01' AND '2026-07-31' AND status IN ('paid', 'overdue') LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1544.6873089967994,
+      "evaluate": 5.149317999894265
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_direct",
+    "question_id": "q07",
+    "category": "fechas",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT COUNT(*) AS total_facturas FROM invoices WHERE issued_date BETWEEN '2026-10-01' AND '2026-10-31' AND status = 'overdue';",
+    "final_sql": "SELECT COUNT(*) AS total_facturas FROM invoices WHERE issued_date BETWEEN '2026-10-01' AND '2026-10-31' AND status = 'overdue' LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1280.6175130026531,
+      "evaluate": 5.858730000909418
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_direct",
+    "question_id": "q08",
+    "category": "fechas",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "execution_error",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT c.full_name FROM customers c WHERE c.creation_date BETWEEN '2025-01-01' AND '2025-12-31';",
+    "final_sql": "SELECT c.full_name FROM customers AS c WHERE c.creation_date BETWEEN '2025-01-01' AND '2025-12-31' LIMIT 100",
+    "error": "No se pudo ejecutar la consulta: column c.creation_date does not exist\nLINE 1: SELECT c.full_name FROM customers AS c WHERE c.creation_date...\n                                                     ^\n",
+    "error_code": "UndefinedColumn",
+    "timings_ms": {
+      "generate": 1129.6474729970214,
+      "evaluate": 5.871640998520888
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_direct",
+    "question_id": "q09",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": 2,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT c.full_name, COALESCE(SUM(p.amount_paid), 0) AS total_paid\nFROM customers c\nJOIN invoices i ON i.customer_id = c.customer_id\nJOIN payments p ON p.invoice_id = i.invoice_id\nGROUP BY c.full_name\nORDER BY total_paid DESC\nLIMIT 5;",
+    "final_sql": "SELECT c.full_name, COALESCE(SUM(p.amount_paid), 0) AS total_paid FROM customers AS c JOIN invoices AS i ON i.customer_id = c.customer_id JOIN payments AS p ON p.invoice_id = i.invoice_id GROUP BY c.full_name ORDER BY total_paid DESC LIMIT 5",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 2197.836469997128,
+      "evaluate": 9.727343000122346
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_direct",
+    "question_id": "q10",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": 4,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT c.full_name, SUM(i.amount) AS total_debt FROM customers c JOIN invoices i ON i.customer_id = c.customer_id WHERE status = 'overdue' GROUP BY c.full_name ORDER BY total_debt DESC NULLS LAST LIMIT 10;",
+    "final_sql": "SELECT c.full_name, SUM(i.amount) AS total_debt FROM customers AS c JOIN invoices AS i ON i.customer_id = c.customer_id WHERE status = 'overdue' GROUP BY c.full_name ORDER BY total_debt DESC NULLS LAST LIMIT 10",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1588.34124400164,
+      "evaluate": 6.742555997334421
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_direct",
+    "question_id": "q11",
+    "category": "join",
+    "difficulty": "media",
+    "original_question": 5,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT action_type, COUNT(*) AS number_of_actions FROM collection_actions WHERE action_date >= '2021-01-01' AND action_type IN ('email_reminder', 'call', 'negotiation') GROUP BY action_type;",
+    "final_sql": "SELECT action_type, COUNT(*) AS number_of_actions FROM collection_actions WHERE action_date >= '2021-01-01' AND action_type IN ('email_reminder', 'call', 'negotiation') GROUP BY action_type LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1790.0351100033731,
+      "evaluate": 6.938142003491521
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_direct",
+    "question_id": "q12",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": 10,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": true,
+    "raw_sql": "SELECT payment_method, COUNT(*) AS COUNT FROM payments GROUP BY payment_method ORDER BY COUNT DESC NULLS LAST LIMIT 1;",
+    "final_sql": "SELECT payment_method, COUNT(*) AS COUNT FROM payments GROUP BY payment_method ORDER BY COUNT DESC NULLS LAST LIMIT 1",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1389.346543001011,
+      "evaluate": 6.224456999916583
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_direct",
+    "question_id": "q13",
+    "category": "agrupacion",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT p.payment_method, COUNT(*) AS total_payments FROM payments p GROUP BY p.payment_method;",
+    "final_sql": "SELECT p.payment_method, COUNT(*) AS total_payments FROM payments AS p GROUP BY p.payment_method LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 793.1287969986442,
+      "evaluate": 6.369271002768073
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_direct",
+    "question_id": "q14",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": true,
+    "raw_sql": "SELECT customers.country, COUNT(customers.customer_id) AS number_of_customers FROM customers GROUP BY customers.country ORDER BY number_of_customers DESC LIMIT 1;",
+    "final_sql": "SELECT customers.country, COUNT(customers.customer_id) AS number_of_customers FROM customers GROUP BY customers.country ORDER BY number_of_customers DESC LIMIT 1",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1103.7360829941463,
+      "evaluate": 5.27033500111429
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_direct",
+    "question_id": "q15",
+    "category": "join",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "execution_error",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT i.customer_id, i.country, COUNT(*) AS total_overdue_invoices\nFROM invoices i\nWHERE i.status = 'overdue'\nGROUP BY i.customer_id, i.country;",
+    "final_sql": "SELECT i.customer_id, i.country, COUNT(*) AS total_overdue_invoices FROM invoices AS i WHERE i.status = 'overdue' GROUP BY i.customer_id, i.country LIMIT 100",
+    "error": "No se pudo ejecutar la consulta: column i.country does not exist\nLINE 1: SELECT i.customer_id, i.country, COUNT(*) AS total_overdue_i...\n                              ^\n",
+    "error_code": "UndefinedColumn",
+    "timings_ms": {
+      "generate": 1598.2173070005956,
+      "evaluate": 6.6328579996479675
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_direct",
+    "question_id": "q16",
+    "category": "fechas",
+    "difficulty": "dificil",
+    "original_question": 7,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT AVG(p.paid_at - i.issued_date) AS average_days_between_issue_and_payment FROM invoices i JOIN payments p ON p.invoice_id = i.invoice_id;",
+    "final_sql": "SELECT AVG(p.paid_at - i.issued_date) AS average_days_between_issue_and_payment FROM invoices AS i JOIN payments AS p ON p.invoice_id = i.invoice_id LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1150.3122709982563,
+      "evaluate": 6.140616998891346
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_direct",
+    "question_id": "q17",
+    "category": "agrupacion",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT invoices.currency, SUM(payments.amount_paid) AS total_paid FROM invoices JOIN payments ON invoices.invoice_id = payments.invoice_id GROUP BY invoices.currency;",
+    "final_sql": "SELECT invoices.currency, SUM(payments.amount_paid) AS total_paid FROM invoices JOIN payments ON invoices.invoice_id = payments.invoice_id GROUP BY invoices.currency LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1192.2948190040188,
+      "evaluate": 6.648874004895333
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_direct",
+    "question_id": "q18",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": true,
+    "raw_sql": "SELECT i.invoice_id, i.amount, c.full_name FROM invoices i JOIN customers c ON i.customer_id = c.customer_id WHERE i.amount IN (SELECT MAX(amount) FROM invoices) GROUP BY i.invoice_id, c.full_name;",
+    "final_sql": "SELECT i.invoice_id, i.amount, c.full_name FROM invoices AS i JOIN customers AS c ON i.customer_id = c.customer_id WHERE i.amount IN (SELECT MAX(amount) FROM invoices) GROUP BY i.invoice_id, c.full_name LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1717.3759939978481,
+      "evaluate": 7.331155000429135
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_direct",
+    "question_id": "q19",
+    "category": "anti-join",
+    "difficulty": "dificil",
+    "original_question": 8,
+    "status": "execution_error",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT customers.full_name FROM customers LEFT JOIN payments ON customers.customer_id = payments.customer_id WHERE payments.customer_id IS NULL;",
+    "final_sql": "SELECT customers.full_name FROM customers LEFT JOIN payments ON customers.customer_id = payments.customer_id WHERE payments.customer_id IS NULL LIMIT 100",
+    "error": "No se pudo ejecutar la consulta: column payments.customer_id does not exist\nLINE 1: ...ers LEFT JOIN payments ON customers.customer_id = payments.c...\n                                                             ^\n",
+    "error_code": "UndefinedColumn",
+    "timings_ms": {
+      "generate": 852.7172670001164,
+      "evaluate": 5.828107998240739
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_direct",
+    "question_id": "q20",
+    "category": "anti-join",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT c.full_name FROM customers c WHERE customer_id NOT IN (SELECT i.customer_id FROM invoices i);",
+    "final_sql": "SELECT c.full_name FROM customers AS c WHERE NOT customer_id IN (SELECT i.customer_id FROM invoices AS i) LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 720.6133369982126,
+      "evaluate": 5.978936998872086
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_direct",
+    "question_id": "q21",
+    "category": "fechas",
+    "difficulty": "dificil",
+    "original_question": 9,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT date_trunc('month', issued_date) AS MONTH, COUNT(*) AS total_invoices FROM invoices WHERE date_part('year', issued_date) = 2026 GROUP BY MONTH;",
+    "final_sql": "SELECT DATE_TRUNC('MONTH', issued_date) AS MONTH, COUNT(*) AS total_invoices FROM invoices WHERE EXTRACT(YEAR FROM issued_date) = 2026 GROUP BY MONTH LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1388.0663539966918,
+      "evaluate": 8.273195999208838
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_direct",
+    "question_id": "q22",
+    "category": "subconsulta",
+    "difficulty": "media",
+    "original_question": 6,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT invoice_id, COUNT(payment_id) AS num_payments FROM payments GROUP BY invoice_id HAVING COUNT(payment_id) > 1;",
+    "final_sql": "SELECT invoice_id, COUNT(payment_id) AS num_payments FROM payments GROUP BY invoice_id HAVING COUNT(payment_id) > 1 LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 968.7403880016063,
+      "evaluate": 5.882041004952043
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_direct",
+    "question_id": "q23",
+    "category": "fechas",
+    "difficulty": "dificil",
+    "original_question": 1,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT COUNT(*) AS total_overdue_invoices_with_more_than_60_days_past_due_date FROM invoices WHERE status = 'overdue' AND due_date BETWEEN '2020-10-01' AND '2020-10-01' AND (CURRENT_DATE - due_date) > 60",
+    "final_sql": "SELECT COUNT(*) AS total_overdue_invoices_with_more_than_60_days_past_due_date FROM invoices WHERE status = 'overdue' AND due_date BETWEEN '2020-10-01' AND '2020-10-01' AND (CURRENT_DATE - due_date) > 60 LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 2133.7358960008714,
+      "evaluate": 6.248232995858416
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_direct",
+    "question_id": "q24",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT c.full_name, SUM(p.amount_paid) AS total_paid FROM customers c JOIN invoices i ON i.customer_id = c.customer_id JOIN payments p ON p.invoice_id = i.invoice_id GROUP BY c.full_name ORDER BY total_paid DESC NULLS LAST LIMIT 1;",
+    "final_sql": "SELECT c.full_name, SUM(p.amount_paid) AS total_paid FROM customers AS c JOIN invoices AS i ON i.customer_id = c.customer_id JOIN payments AS p ON p.invoice_id = i.invoice_id GROUP BY c.full_name ORDER BY total_paid DESC NULLS LAST LIMIT 1",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 2107.0643280036165,
+      "evaluate": 8.764151003560983
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_direct",
+    "question_id": "q25",
+    "category": "estadistica",
+    "difficulty": "dificil",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT MIN(amount) AS min_amount FROM invoices;",
+    "final_sql": "SELECT MIN(amount) AS min_amount FROM invoices LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 491.23283800145146,
+      "evaluate": 6.410835005226545
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_direct",
+    "question_id": "q26",
+    "category": "ventana",
+    "difficulty": "dificil",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT c.full_name, SUM(i.amount) AS total_spent\nFROM customers c JOIN invoices i ON i.customer_id = c.customer_id\nWHERE c.full_name IN ('Ana Torres', 'Marco Rossi', 'Luisa Fernandez')\nGROUP BY c.full_name\nORDER BY total_spent DESC NULLS LAST\nLIMIT 3;",
+    "final_sql": "SELECT c.full_name, SUM(i.amount) AS total_spent FROM customers AS c JOIN invoices AS i ON i.customer_id = c.customer_id WHERE c.full_name IN ('Ana Torres', 'Marco Rossi', 'Luisa Fernandez') GROUP BY c.full_name ORDER BY total_spent DESC NULLS LAST LIMIT 3",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 2314.090772997588,
+      "evaluate": 7.104387004801538
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_direct",
+    "question_id": "q27",
+    "category": "texto",
+    "difficulty": "dificil",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT payment_method FROM payments GROUP BY payment_method ORDER BY payment_method ASC;",
+    "final_sql": "SELECT payment_method FROM payments GROUP BY payment_method ORDER BY payment_method ASC LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 971.5850119973766,
+      "evaluate": 6.366523004544433
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_direct",
+    "question_id": "q28",
+    "category": "agregacion",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT invoices.invoice_id, payments.payment_id, round(SUM(payments.amount_paid)/NULLIF(COUNT(payments.payment_id), 0), 2) AS average_payment_per_invoice FROM invoices JOIN payments ON invoices.invoice_id = payments.invoice_id GROUP BY invoices.invoice_id, payments.payment_id;",
+    "final_sql": "SELECT invoices.invoice_id, payments.payment_id, ROUND(SUM(payments.amount_paid) / NULLIF(COUNT(payments.payment_id), 0), 2) AS average_payment_per_invoice FROM invoices JOIN payments ON invoices.invoice_id = payments.invoice_id GROUP BY invoices.invoice_id, payments.payment_id LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 2007.6370870010578,
+      "evaluate": 8.355950994882733
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_direct",
+    "question_id": "q29",
+    "category": "join",
+    "difficulty": "dificil",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": true,
+    "raw_sql": "SELECT c.full_name, COUNT(i.invoice_id) AS total_invoices, SUM(CASE WHEN i.status = 'overdue' THEN 1 ELSE 0 END) AS late_invoices FROM customers c JOIN invoices i ON i.customer_id = c.customer_id GROUP BY c.full_name HAVING COUNT(i.invoice_id) > 10;",
+    "final_sql": "SELECT c.full_name, COUNT(i.invoice_id) AS total_invoices, SUM(CASE WHEN i.status = 'overdue' THEN 1 ELSE 0 END) AS late_invoices FROM customers AS c JOIN invoices AS i ON i.customer_id = c.customer_id GROUP BY c.full_name HAVING COUNT(i.invoice_id) > 10 LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 2305.419616997824,
+      "evaluate": 7.007207997958176
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_direct",
+    "question_id": "q30",
+    "category": "subconsulta",
+    "difficulty": "dificil",
+    "original_question": null,
+    "status": "firewall_rejected",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT c.full_name, COUNT(i.invoice_id) AS total_invoices_overdue FROM customers c JOIN invoices i ON i.customer_id = c.customer_id WHERE status = 'overdue' GROUP BY c.full_name HAVING COUNT(i.invoice_id) > COUNT(p.payment_id) AS total_payments FROM payments p JOIN invoices i ON i.invoice_id = p.invoice_id WHERE p.paid_at IS NOT NULL GROUP BY c.full_name;",
+    "final_sql": null,
+    "error": "Error al parsear SQL: ParseError",
+    "error_code": null,
+    "timings_ms": {
+      "generate": 2598.4823839971796,
+      "evaluate": 3.5942899994552135
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_transpiled",
+    "question_id": "q01",
+    "category": "conteo",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT COUNT(customer_id) AS total_customers FROM customers;",
+    "final_sql": "SELECT COUNT(customer_id) AS total_customers FROM customers FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 800.9373430031701,
+      "evaluate": 222.79584599891677
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_transpiled",
+    "question_id": "q02",
+    "category": "conteo",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT invoice_id, customer_id, amount, issued_date, due_date FROM invoices WHERE status = 'overdue';",
+    "final_sql": "SELECT invoice_id, customer_id, amount, issued_date, due_date FROM invoices WHERE status = 'overdue' FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 969.8914979962865,
+      "evaluate": 83.484230999602
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_transpiled",
+    "question_id": "q03",
+    "category": "conteo",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT customers.full_name, customers.country FROM customers WHERE customers.country = 'Colombia' ORDER BY customers.full_name NULLS LAST;",
+    "final_sql": "SELECT customers.full_name, customers.country FROM customers WHERE customers.country = 'Colombia' ORDER BY customers.full_name FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 908.4124239961966,
+      "evaluate": 87.48953400208848
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_transpiled",
+    "question_id": "q04",
+    "category": "agregacion",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT SUM(i.amount) AS total_amount_in_usd FROM invoices i WHERE i.currency = 'USD';",
+    "final_sql": "SELECT SUM(i.amount) AS total_amount_in_usd FROM invoices i WHERE i.currency = 'USD' FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1029.1294359994936,
+      "evaluate": 82.02438500302378
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_transpiled",
+    "question_id": "q05",
+    "category": "conteo",
+    "difficulty": "facil",
+    "original_question": 3,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT invoice_id, customer_id, amount, issued_date, due_date FROM invoices WHERE status = 'due';",
+    "final_sql": "SELECT invoice_id, customer_id, amount, issued_date, due_date FROM invoices WHERE status = 'due' FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 699.020505999215,
+      "evaluate": 78.72086600400507
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_transpiled",
+    "question_id": "q06",
+    "category": "fechas",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT COUNT(*) AS total_invoices FROM invoices WHERE issued_date BETWEEN '2026-07-01' AND '2026-07-31' AND status IN ('paid', 'overdue');",
+    "final_sql": "SELECT COUNT(*) AS total_invoices FROM invoices WHERE issued_date BETWEEN '2026-07-01' AND '2026-07-31' AND status IN ('paid', 'overdue') FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1369.9876699974993,
+      "evaluate": 105.26137099805055
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_transpiled",
+    "question_id": "q07",
+    "category": "fechas",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT COUNT(*) AS total_facturas FROM invoices WHERE issued_date BETWEEN '2026-10-01' AND '2026-10-31' AND status = 'overdue';",
+    "final_sql": "SELECT COUNT(*) AS total_facturas FROM invoices WHERE issued_date BETWEEN '2026-10-01' AND '2026-10-31' AND status = 'overdue' FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1274.1647820002981,
+      "evaluate": 90.86042900162283
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_transpiled",
+    "question_id": "q08",
+    "category": "fechas",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "execution_error",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT c.full_name FROM customers c WHERE c.creation_date BETWEEN '2025-01-01' AND '2025-12-31';",
+    "final_sql": "SELECT c.full_name FROM customers c WHERE c.creation_date BETWEEN '2025-01-01' AND '2025-12-31' FETCH FIRST 100 ROWS ONLY",
+    "error": "No se pudo ejecutar la consulta: ORA-00904: \"C\".\"CREATION_DATE\": invalid identifier\nHelp: https://docs.oracle.com/error-help/db/ora-00904/",
+    "error_code": "ORA-00904",
+    "timings_ms": {
+      "generate": 1076.6194490061025,
+      "evaluate": 78.09742099925643
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_transpiled",
+    "question_id": "q09",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": 2,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT c.full_name, COALESCE(SUM(p.amount_paid), 0) AS total_paid\nFROM customers c\nJOIN invoices i ON i.customer_id = c.customer_id\nJOIN payments p ON p.invoice_id = i.invoice_id\nGROUP BY c.full_name\nORDER BY total_paid DESC\nLIMIT 5;",
+    "final_sql": "SELECT c.full_name, COALESCE(SUM(p.amount_paid), 0) AS total_paid FROM customers c JOIN invoices i ON i.customer_id = c.customer_id JOIN payments p ON p.invoice_id = i.invoice_id GROUP BY c.full_name ORDER BY total_paid DESC FETCH FIRST 5 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 2200.7608200001414,
+      "evaluate": 110.52823399950285
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_transpiled",
+    "question_id": "q10",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": 4,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT c.full_name, SUM(i.amount) AS total_debt FROM customers c JOIN invoices i ON i.customer_id = c.customer_id WHERE status = 'overdue' GROUP BY c.full_name ORDER BY total_debt DESC NULLS LAST LIMIT 10;",
+    "final_sql": "SELECT c.full_name, SUM(i.amount) AS total_debt FROM customers c JOIN invoices i ON i.customer_id = c.customer_id WHERE status = 'overdue' GROUP BY c.full_name ORDER BY total_debt DESC NULLS LAST FETCH FIRST 10 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1586.2245859971154,
+      "evaluate": 120.9327049946296
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_transpiled",
+    "question_id": "q11",
+    "category": "join",
+    "difficulty": "media",
+    "original_question": 5,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT action_type, COUNT(*) AS number_of_actions FROM collection_actions WHERE action_date BETWEEN '2021-01-01' AND '2021-12-31' GROUP BY action_type;",
+    "final_sql": "SELECT action_type, COUNT(*) AS number_of_actions FROM collection_actions WHERE action_date BETWEEN '2021-01-01' AND '2021-12-31' GROUP BY action_type FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1673.8595029964927,
+      "evaluate": 126.92026299919235
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_transpiled",
+    "question_id": "q12",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": 10,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": true,
+    "raw_sql": "SELECT payment_method, COUNT(*) AS COUNT FROM payments GROUP BY payment_method ORDER BY COUNT DESC NULLS LAST LIMIT 1;",
+    "final_sql": "SELECT payment_method, COUNT(*) AS COUNT FROM payments GROUP BY payment_method ORDER BY COUNT DESC NULLS LAST FETCH FIRST 1 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1107.7698119988781,
+      "evaluate": 81.87325700419024
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_transpiled",
+    "question_id": "q13",
+    "category": "agrupacion",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT p.payment_method, COUNT(*) AS total_payments FROM payments p GROUP BY p.payment_method;",
+    "final_sql": "SELECT p.payment_method, COUNT(*) AS total_payments FROM payments p GROUP BY p.payment_method FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 794.7304810004425,
+      "evaluate": 79.30313199904049
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_transpiled",
+    "question_id": "q14",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": true,
+    "raw_sql": "SELECT customers.country, COUNT(customers.customer_id) AS number_of_customers FROM customers GROUP BY customers.country ORDER BY number_of_customers DESC LIMIT 1;",
+    "final_sql": "SELECT customers.country, COUNT(customers.customer_id) AS number_of_customers FROM customers GROUP BY customers.country ORDER BY number_of_customers DESC FETCH FIRST 1 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1098.27815600147,
+      "evaluate": 82.64560799580067
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_transpiled",
+    "question_id": "q15",
+    "category": "join",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "execution_error",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT i.customer_id, i.country, COUNT(*) AS total_overdue_invoices\nFROM invoices i\nWHERE i.status = 'overdue'\nGROUP BY i.customer_id, i.country;",
+    "final_sql": "SELECT i.customer_id, i.country, COUNT(*) AS total_overdue_invoices FROM invoices i WHERE i.status = 'overdue' GROUP BY i.customer_id, i.country FETCH FIRST 100 ROWS ONLY",
+    "error": "No se pudo ejecutar la consulta: ORA-00904: \"I\".\"COUNTRY\": invalid identifier\nHelp: https://docs.oracle.com/error-help/db/ora-00904/",
+    "error_code": "ORA-00904",
+    "timings_ms": {
+      "generate": 1429.2688939967775,
+      "evaluate": 85.43386199744418
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_transpiled",
+    "question_id": "q16",
+    "category": "fechas",
+    "difficulty": "dificil",
+    "original_question": 7,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT AVG(p.paid_at - i.issued_date) AS average_days_between_issue_and_payment FROM invoices i JOIN payments p ON p.invoice_id = i.invoice_id;",
+    "final_sql": "SELECT AVG(p.paid_at - i.issued_date) AS average_days_between_issue_and_payment FROM invoices i JOIN payments p ON p.invoice_id = i.invoice_id FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1152.0681850015535,
+      "evaluate": 87.46640099707292
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_transpiled",
+    "question_id": "q17",
+    "category": "agrupacion",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT invoices.currency, SUM(payments.amount_paid) AS total_paid FROM invoices JOIN payments ON invoices.invoice_id = payments.invoice_id GROUP BY invoices.currency;",
+    "final_sql": "SELECT invoices.currency, SUM(payments.amount_paid) AS total_paid FROM invoices JOIN payments ON invoices.invoice_id = payments.invoice_id GROUP BY invoices.currency FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1200.322206997953,
+      "evaluate": 84.78115899924887
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_transpiled",
+    "question_id": "q18",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": true,
+    "raw_sql": "SELECT i.invoice_id, i.amount, c.full_name FROM invoices i JOIN customers c ON c.customer_id = i.customer_id ORDER BY i.amount DESC LIMIT 1;",
+    "final_sql": "SELECT i.invoice_id, i.amount, c.full_name FROM invoices i JOIN customers c ON c.customer_id = i.customer_id ORDER BY i.amount DESC FETCH FIRST 1 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1167.0466369978385,
+      "evaluate": 82.47538899740903
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_transpiled",
+    "question_id": "q19",
+    "category": "anti-join",
+    "difficulty": "dificil",
+    "original_question": 8,
+    "status": "execution_error",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT customers.full_name FROM customers LEFT JOIN payments ON customers.customer_id = payments.customer_id WHERE payments.customer_id IS NULL;",
+    "final_sql": "SELECT customers.full_name FROM customers LEFT JOIN payments ON customers.customer_id = payments.customer_id WHERE payments.customer_id IS NULL FETCH FIRST 100 ROWS ONLY",
+    "error": "No se pudo ejecutar la consulta: ORA-00904: \"PAYMENTS\".\"CUSTOMER_ID\": invalid identifier\nHelp: https://docs.oracle.com/error-help/db/ora-00904/",
+    "error_code": "ORA-00904",
+    "timings_ms": {
+      "generate": 830.7888739946065,
+      "evaluate": 86.23902999534039
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_transpiled",
+    "question_id": "q20",
+    "category": "anti-join",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT c.full_name FROM customers c WHERE customer_id NOT IN (SELECT i.customer_id FROM invoices i);",
+    "final_sql": "SELECT c.full_name FROM customers c WHERE NOT customer_id IN (SELECT i.customer_id FROM invoices i) FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 705.112409996218,
+      "evaluate": 91.23270100099035
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_transpiled",
+    "question_id": "q21",
+    "category": "fechas",
+    "difficulty": "dificil",
+    "original_question": 9,
+    "status": "execution_error",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT date_trunc('month', issued_date) AS MONTH, COUNT(*) AS total_invoices FROM invoices WHERE date_part('year', issued_date) = 2026 GROUP BY MONTH;",
+    "final_sql": "SELECT TIMESTAMP_TRUNC(issued_date, MONTH) AS MONTH, COUNT(*) AS total_invoices FROM invoices WHERE EXTRACT(YEAR FROM issued_date) = 2026 GROUP BY 1 FETCH FIRST 100 ROWS ONLY",
+    "error": "No se pudo ejecutar la consulta: ORA-00904: \"TIMESTAMP_TRUNC\": invalid identifier\nHelp: https://docs.oracle.com/error-help/db/ora-00904/",
+    "error_code": "ORA-00904",
+    "timings_ms": {
+      "generate": 1402.6356789981946,
+      "evaluate": 83.57822600373765
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_transpiled",
+    "question_id": "q22",
+    "category": "subconsulta",
+    "difficulty": "media",
+    "original_question": 6,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT invoice_id, COUNT(payment_id) AS num_payments FROM payments GROUP BY invoice_id HAVING COUNT(payment_id) > 1;",
+    "final_sql": "SELECT invoice_id, COUNT(payment_id) AS num_payments FROM payments GROUP BY invoice_id HAVING COUNT(payment_id) > 1 FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 951.1705669938237,
+      "evaluate": 89.12285299447831
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_transpiled",
+    "question_id": "q23",
+    "category": "fechas",
+    "difficulty": "dificil",
+    "original_question": 1,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT COUNT(*) AS total_overdue_invoices_with_more_than_60_days_past_due_date FROM invoices WHERE status = 'overdue' AND issued_date <= '2026-10-01' AND (due_date - issued_date) > 60",
+    "final_sql": "SELECT COUNT(*) AS total_overdue_invoices_with_more_than_60_days_past_due_date FROM invoices WHERE status = 'overdue' AND issued_date <= '2026-10-01' AND (due_date - issued_date) > 60 FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1534.4684459996643,
+      "evaluate": 83.42619200266199
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_transpiled",
+    "question_id": "q24",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT c.full_name, SUM(p.amount_paid) AS total_paid FROM customers c JOIN invoices i ON i.customer_id = c.customer_id JOIN payments p ON p.invoice_id = i.invoice_id GROUP BY c.full_name ORDER BY total_paid DESC NULLS LAST LIMIT 1;",
+    "final_sql": "SELECT c.full_name, SUM(p.amount_paid) AS total_paid FROM customers c JOIN invoices i ON i.customer_id = c.customer_id JOIN payments p ON p.invoice_id = i.invoice_id GROUP BY c.full_name ORDER BY total_paid DESC NULLS LAST FETCH FIRST 1 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1763.7514880043454,
+      "evaluate": 95.01700400141999
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_transpiled",
+    "question_id": "q25",
+    "category": "estadistica",
+    "difficulty": "dificil",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT MIN(amount) AS min_amount FROM invoices;",
+    "final_sql": "SELECT MIN(amount) AS min_amount FROM invoices FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 483.88792100013234,
+      "evaluate": 84.13603600638453
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_transpiled",
+    "question_id": "q26",
+    "category": "ventana",
+    "difficulty": "dificil",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT c.full_name, SUM(i.amount) AS total_spent\nFROM customers c JOIN invoices i ON i.customer_id = c.customer_id\nWHERE c.full_name IN ('Ana Torres', 'Marco Rossi', 'Luisa Fernandez')\nGROUP BY c.full_name\nORDER BY total_spent DESC NULLS LAST\nLIMIT 3;",
+    "final_sql": "SELECT c.full_name, SUM(i.amount) AS total_spent FROM customers c JOIN invoices i ON i.customer_id = c.customer_id WHERE c.full_name IN ('Ana Torres', 'Marco Rossi', 'Luisa Fernandez') GROUP BY c.full_name ORDER BY total_spent DESC NULLS LAST FETCH FIRST 3 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 2312.0280459988862,
+      "evaluate": 91.79316399968229
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_transpiled",
+    "question_id": "q27",
+    "category": "texto",
+    "difficulty": "dificil",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT payment_method FROM payments GROUP BY payment_method ORDER BY payment_method ASC;",
+    "final_sql": "SELECT payment_method FROM payments GROUP BY payment_method ORDER BY payment_method ASC FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 976.917363004759,
+      "evaluate": 81.0183900030097
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_transpiled",
+    "question_id": "q28",
+    "category": "agregacion",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT invoices.invoice_id, payments.payment_id, round(SUM(payments.amount_paid)/NULLIF(COUNT(payments.payment_id), 0), 2) AS average_payment_per_invoice FROM invoices JOIN payments ON invoices.invoice_id = payments.invoice_id GROUP BY invoices.invoice_id, payments.payment_id;",
+    "final_sql": "SELECT invoices.invoice_id, payments.payment_id, ROUND(SUM(payments.amount_paid) / NULLIF(COUNT(payments.payment_id), 0), 2) AS average_payment_per_invoice FROM invoices JOIN payments ON invoices.invoice_id = payments.invoice_id GROUP BY invoices.invoice_id, payments.payment_id FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 2007.339387004322,
+      "evaluate": 84.72314700338757
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_transpiled",
+    "question_id": "q29",
+    "category": "join",
+    "difficulty": "dificil",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": true,
+    "raw_sql": "SELECT c.full_name, COUNT(i.invoice_id) AS total_invoices, SUM(CASE WHEN i.status = 'overdue' THEN 1 ELSE 0 END) AS overdue_invoices FROM customers c JOIN invoices i ON i.customer_id = c.customer_id GROUP BY c.full_name HAVING COUNT(i.invoice_id) > 10;",
+    "final_sql": "SELECT c.full_name, COUNT(i.invoice_id) AS total_invoices, SUM(CASE WHEN i.status = 'overdue' THEN 1 ELSE 0 END) AS overdue_invoices FROM customers c JOIN invoices i ON i.customer_id = c.customer_id GROUP BY c.full_name HAVING COUNT(i.invoice_id) > 10 FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 2146.668663001037,
+      "evaluate": 83.07942399551393
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "pg_transpiled",
+    "question_id": "q30",
+    "category": "subconsulta",
+    "difficulty": "dificil",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT c.full_name, COUNT(i.invoice_id) AS total_invoices_overdue, COUNT(p.payment_id) AS total_payments FROM customers c LEFT JOIN invoices i ON i.customer_id = c.customer_id LEFT JOIN payments p ON p.invoice_id = i.invoice_id AND p.paid_at BETWEEN i.issued_date AND i.due_date WHERE i.status = 'overdue' AND p.payment_id IS NULL GROUP BY c.full_name;",
+    "final_sql": "SELECT c.full_name, COUNT(i.invoice_id) AS total_invoices_overdue, COUNT(p.payment_id) AS total_payments FROM customers c LEFT JOIN invoices i ON i.customer_id = c.customer_id LEFT JOIN payments p ON p.invoice_id = i.invoice_id AND p.paid_at BETWEEN i.issued_date AND i.due_date WHERE i.status = 'overdue' AND p.payment_id IS NULL GROUP BY c.full_name FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 2594.9651219998486,
+      "evaluate": 87.4164880005992
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "oracle_direct",
+    "question_id": "q01",
+    "category": "conteo",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT COUNT(customer_id) AS total_customers FROM customers",
+    "final_sql": "SELECT COUNT(customer_id) AS total_customers FROM customers FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 454.4909220057889,
+      "evaluate": 44.449747998442035
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "oracle_direct",
+    "question_id": "q02",
+    "category": "conteo",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT COUNT(*) AS total_overdue_invoices FROM invoices WHERE status = 'overdue'",
+    "final_sql": "SELECT COUNT(*) AS total_overdue_invoices FROM invoices WHERE status = 'overdue' FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 660.4642849997617,
+      "evaluate": 38.83697999845026
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "oracle_direct",
+    "question_id": "q03",
+    "category": "conteo",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT customers.full_name FROM customers WHERE customers.country = 'Colombia'",
+    "final_sql": "SELECT customers.full_name FROM customers WHERE customers.country = 'Colombia' FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 844.3162429975928,
+      "evaluate": 42.184723999525886
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "oracle_direct",
+    "question_id": "q04",
+    "category": "agregacion",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT SUM(i.amount) AS total_amount_in_usd\nFROM invoices i\nWHERE i.currency = 'USD'",
+    "final_sql": "SELECT SUM(i.amount) AS total_amount_in_usd FROM invoices i WHERE i.currency = 'USD' FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1313.4215780009981,
+      "evaluate": 48.86950599757256
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "oracle_direct",
+    "question_id": "q05",
+    "category": "conteo",
+    "difficulty": "facil",
+    "original_question": 3,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT invoice_id, customer_id, amount, issued_date, due_date FROM invoices WHERE status = 'pending'",
+    "final_sql": "SELECT invoice_id, customer_id, amount, issued_date, due_date FROM invoices WHERE status = 'pending' FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 717.6687169994693,
+      "evaluate": 47.129655999015085
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "oracle_direct",
+    "question_id": "q06",
+    "category": "fechas",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT COUNT(*) AS total_invoices FROM invoices WHERE issued_date BETWEEN '2026-07-01' AND '2026-07-31'",
+    "final_sql": "SELECT COUNT(*) AS total_invoices FROM invoices WHERE issued_date BETWEEN '2026-07-01' AND '2026-07-31' FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1215.3063620062312,
+      "evaluate": 40.146026003640145
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "oracle_direct",
+    "question_id": "q07",
+    "category": "fechas",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT invoice_id, customer_id, amount, issued_date, due_date\nFROM invoices\nWHERE status = 'overdue' AND issued_date BETWEEN to_date('2026-10-01', 'YYYY-MM-DD') AND to_date('2026-10-31', 'YYYY-MM-DD')",
+    "final_sql": "SELECT invoice_id, customer_id, amount, issued_date, due_date FROM invoices WHERE status = 'overdue' AND issued_date BETWEEN TO_DATE('2026-10-01', 'YYYY-MM-DD') AND TO_DATE('2026-10-31', 'YYYY-MM-DD') FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 2025.5020820040954,
+      "evaluate": 42.096707999007776
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "oracle_direct",
+    "question_id": "q08",
+    "category": "fechas",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "execution_error",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT c.full_name FROM customers c WHERE c.creation_date BETWEEN TO_DATE('2025-01-01', 'YYYY-MM-DD') AND TO_DATE('2025-12-31', 'YYYY-MM-DD')",
+    "final_sql": "SELECT c.full_name FROM customers c WHERE c.creation_date BETWEEN TO_DATE('2025-01-01', 'YYYY-MM-DD') AND TO_DATE('2025-12-31', 'YYYY-MM-DD') FETCH FIRST 100 ROWS ONLY",
+    "error": "No se pudo ejecutar la consulta: ORA-00904: \"C\".\"CREATION_DATE\": invalid identifier\nHelp: https://docs.oracle.com/error-help/db/ora-00904/",
+    "error_code": "ORA-00904",
+    "timings_ms": {
+      "generate": 1552.262167999288,
+      "evaluate": 40.630850999150425
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "oracle_direct",
+    "question_id": "q09",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": 2,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT c.full_name, COUNT(*) AS total_payments\nFROM customers c\nJOIN invoices i ON i.customer_id = c.customer_id\nJOIN payments p ON p.invoice_id = i.invoice_id\nGROUP BY c.full_name\nORDER BY total_payments DESC\nFETCH FIRST 5 ROWS ONLY;",
+    "final_sql": "SELECT c.full_name, COUNT(*) AS total_payments FROM customers c JOIN invoices i ON i.customer_id = c.customer_id JOIN payments p ON p.invoice_id = i.invoice_id GROUP BY c.full_name ORDER BY total_payments DESC FETCH FIRST 5 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 2324.7220119956182,
+      "evaluate": 51.44633999589132
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "oracle_direct",
+    "question_id": "q10",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": 4,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT c.full_name, SUM(i.amount) AS total_debt FROM customers c JOIN invoices i ON i.customer_id = c.customer_id WHERE i.status = 'overdue' GROUP BY c.full_name ORDER BY total_debt DESC NULLS LAST FETCH FIRST 10 ROWS ONLY",
+    "final_sql": "SELECT c.full_name, SUM(i.amount) AS total_debt FROM customers c JOIN invoices i ON i.customer_id = c.customer_id WHERE i.status = 'overdue' GROUP BY c.full_name ORDER BY total_debt DESC NULLS LAST FETCH FIRST 10 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1858.7123129982501,
+      "evaluate": 49.954376998357475
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "oracle_direct",
+    "question_id": "q11",
+    "category": "join",
+    "difficulty": "media",
+    "original_question": 5,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT action_type, COUNT(*) AS total_acciones\nFROM collection_actions ca\nWHERE action_date >= SYSDATE\nGROUP BY action_type\nORDER BY total_acciones DESC NULLS LAST",
+    "final_sql": "SELECT action_type, COUNT(*) AS total_acciones FROM collection_actions ca WHERE action_date >= SYSDATE GROUP BY action_type ORDER BY total_acciones DESC NULLS LAST FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1657.5878670046222,
+      "evaluate": 38.838119005959015
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "oracle_direct",
+    "question_id": "q12",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": 10,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": true,
+    "raw_sql": "SELECT payment_method, COUNT(*) AS COUNT\nFROM payments\nGROUP BY payment_method\nORDER BY COUNT DESC\nLIMIT 1",
+    "final_sql": "SELECT payment_method, COUNT(*) AS COUNT FROM payments GROUP BY payment_method ORDER BY COUNT DESC FETCH FIRST 1 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1357.379369001137,
+      "evaluate": 45.171268000558484
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "oracle_direct",
+    "question_id": "q13",
+    "category": "agrupacion",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT payment_method, COUNT(*) AS total_payments FROM payments GROUP BY payment_method;",
+    "final_sql": "SELECT payment_method, COUNT(*) AS total_payments FROM payments GROUP BY payment_method FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 640.5481249967124,
+      "evaluate": 38.48028300126316
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "oracle_direct",
+    "question_id": "q14",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT customers.country, COUNT(customers.customer_id) AS total_customers FROM customers GROUP BY customers.country ORDER BY total_customers DESC NULLS LAST;",
+    "final_sql": "SELECT customers.country, COUNT(customers.customer_id) AS total_customers FROM customers GROUP BY customers.country ORDER BY total_customers DESC NULLS LAST FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1265.879924998444,
+      "evaluate": 42.03482699813321
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "oracle_direct",
+    "question_id": "q15",
+    "category": "join",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "execution_error",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT country_code, COUNT(*) AS total_invoices FROM invoices WHERE status = 'overdue' GROUP BY country_code;",
+    "final_sql": "SELECT country_code, COUNT(*) AS total_invoices FROM invoices WHERE status = 'overdue' GROUP BY country_code FETCH FIRST 100 ROWS ONLY",
+    "error": "No se pudo ejecutar la consulta: ORA-00904: \"COUNTRY_CODE\": invalid identifier\nHelp: https://docs.oracle.com/error-help/db/ora-00904/",
+    "error_code": "ORA-00904",
+    "timings_ms": {
+      "generate": 1098.853733004944,
+      "evaluate": 42.407878005178645
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "oracle_direct",
+    "question_id": "q16",
+    "category": "fechas",
+    "difficulty": "dificil",
+    "original_question": 7,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT AVG(TRUNC(p.paid_at) - i.issued_date) AS average_days_between_issue_and_payment\nFROM invoices i JOIN payments p ON p.invoice_id = i.invoice_id",
+    "final_sql": "SELECT AVG(TRUNC(p.paid_at, 'DD') - i.issued_date) AS average_days_between_issue_and_payment FROM invoices i JOIN payments p ON p.invoice_id = i.invoice_id FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1304.9313359952066,
+      "evaluate": 50.718983002298046
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "oracle_direct",
+    "question_id": "q17",
+    "category": "agrupacion",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "execution_error",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT currency, SUM(amount) AS total_amount_paid\nFROM invoices\nWHERE status IN ('paid', 'overdue')\nGROUP BY dollar\nORDER BY total_amount_paid DESC NULLS LAST;",
+    "final_sql": "SELECT currency, SUM(amount) AS total_amount_paid FROM invoices WHERE status IN ('paid', 'overdue') GROUP BY dollar ORDER BY total_amount_paid DESC NULLS LAST FETCH FIRST 100 ROWS ONLY",
+    "error": "No se pudo ejecutar la consulta: ORA-00904: \"DOLLAR\": invalid identifier\nHelp: https://docs.oracle.com/error-help/db/ora-00904/",
+    "error_code": "ORA-00904",
+    "timings_ms": {
+      "generate": 1169.2542689997936,
+      "evaluate": 44.32299800100736
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "oracle_direct",
+    "question_id": "q18",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT i.invoice_id, i.customer_id, MAX(i.amount) AS max_amount, c.full_name\nFROM invoices i\nJOIN customers c ON c.customer_id = i.customer_id\nGROUP BY i.invoice_id, i.customer_id, c.full_name\nORDER BY max_amount DESC",
+    "final_sql": "SELECT i.invoice_id, i.customer_id, MAX(i.amount) AS max_amount, c.full_name FROM invoices i JOIN customers c ON c.customer_id = i.customer_id GROUP BY i.invoice_id, i.customer_id, c.full_name ORDER BY max_amount DESC FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 2068.8788080005907,
+      "evaluate": 46.52440499921795
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "oracle_direct",
+    "question_id": "q19",
+    "category": "anti-join",
+    "difficulty": "dificil",
+    "original_question": 8,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT c.full_name FROM customers c WHERE customer_id NOT IN (SELECT i.customer_id FROM invoices i JOIN payments p ON p.invoice_id = i.invoice_id)",
+    "final_sql": "SELECT c.full_name FROM customers c WHERE NOT customer_id IN (SELECT i.customer_id FROM invoices i JOIN payments p ON p.invoice_id = i.invoice_id) FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1239.5818810036872,
+      "evaluate": 54.43147799815051
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "oracle_direct",
+    "question_id": "q20",
+    "category": "anti-join",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT c.full_name FROM customers c WHERE customer_id NOT IN (SELECT i.customer_id FROM invoices i)",
+    "final_sql": "SELECT c.full_name FROM customers c WHERE NOT customer_id IN (SELECT i.customer_id FROM invoices i) FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 857.9464810027275,
+      "evaluate": 39.1089339973405
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "oracle_direct",
+    "question_id": "q21",
+    "category": "fechas",
+    "difficulty": "dificil",
+    "original_question": 9,
+    "status": "execution_error",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT date_trunc('month', issued_date) AS MONTH, COUNT(*) AS total_invoices FROM invoices WHERE date_part('year', issued_date) = 2026 GROUP BY MONTH;",
+    "final_sql": "SELECT TRUNC(issued_date, 'MONTH') AS MONTH, COUNT(*) AS total_invoices FROM invoices WHERE DATE_PART('year', issued_date) = 2026 GROUP BY 1 FETCH FIRST 100 ROWS ONLY",
+    "error": "No se pudo ejecutar la consulta: ORA-00904: \"DATE_PART\": invalid identifier\nHelp: https://docs.oracle.com/error-help/db/ora-00904/",
+    "error_code": "ORA-00904",
+    "timings_ms": {
+      "generate": 1411.696238006698,
+      "evaluate": 38.76986800605664
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "oracle_direct",
+    "question_id": "q22",
+    "category": "subconsulta",
+    "difficulty": "media",
+    "original_question": 6,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT COUNT(*) AS total_invoices_with_multiple_payments FROM invoices i JOIN (SELECT payment_id FROM payments) p ON i.invoice_id = p.payment_id GROUP BY i.invoice_id HAVING COUNT(p.payment_id) > 1",
+    "final_sql": "SELECT COUNT(*) AS total_invoices_with_multiple_payments FROM invoices i JOIN (SELECT payment_id FROM payments) p ON i.invoice_id = p.payment_id GROUP BY i.invoice_id HAVING COUNT(p.payment_id) > 1 FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1725.6874160011648,
+      "evaluate": 49.16585599858081
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "oracle_direct",
+    "question_id": "q23",
+    "category": "fechas",
+    "difficulty": "dificil",
+    "original_question": 1,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT COUNT(*) AS total_overdue_invoices_with_more_than_60_days_past_due_date FROM invoices WHERE status = 'overdue' AND due_date BETWEEN '2020-10-01' AND '2020-10-01' AND (SYSDATE - issued_date) > 60",
+    "final_sql": "SELECT COUNT(*) AS total_overdue_invoices_with_more_than_60_days_past_due_date FROM invoices WHERE status = 'overdue' AND due_date BETWEEN '2020-10-01' AND '2020-10-01' AND (SYSDATE - issued_date) > 60 FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 2153.179798006022,
+      "evaluate": 51.4272689979407
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "oracle_direct",
+    "question_id": "q24",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT c.full_name, SUM(p.amount_paid) AS total_paid FROM customers c JOIN invoices i ON i.customer_id = c.customer_id JOIN payments p ON p.invoice_id = i.invoice_id GROUP BY c.full_name ORDER BY total_paid DESC NULLS LAST;",
+    "final_sql": "SELECT c.full_name, SUM(p.amount_paid) AS total_paid FROM customers c JOIN invoices i ON i.customer_id = c.customer_id JOIN payments p ON p.invoice_id = i.invoice_id GROUP BY c.full_name ORDER BY total_paid DESC NULLS LAST FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1911.1130290039,
+      "evaluate": 51.47532899718499
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "oracle_direct",
+    "question_id": "q25",
+    "category": "estadistica",
+    "difficulty": "dificil",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT MIN(amount) AS min_amount\nFROM invoices\nWHERE status IN ('paid', 'overdue')",
+    "final_sql": "SELECT MIN(amount) AS min_amount FROM invoices WHERE status IN ('paid', 'overdue') FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1031.0294719965896,
+      "evaluate": 46.511091000866145
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "oracle_direct",
+    "question_id": "q26",
+    "category": "ventana",
+    "difficulty": "dificil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT c.full_name, SUM(i.amount) AS total_spent\nFROM customers c\nJOIN invoices i ON i.customer_id = c.customer_id\nGROUP BY c.full_name\nORDER BY total_spent DESC\nLIMIT 3",
+    "final_sql": "SELECT c.full_name, SUM(i.amount) AS total_spent FROM customers c JOIN invoices i ON i.customer_id = c.customer_id GROUP BY c.full_name ORDER BY total_spent DESC FETCH FIRST 3 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1756.0933219938306,
+      "evaluate": 47.33626799861668
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "oracle_direct",
+    "question_id": "q27",
+    "category": "texto",
+    "difficulty": "dificil",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT payment_method AS metodo_pago, COUNT(*) AS total_pagos_por_metodo\nFROM payments\nGROUP BY payment_method\nORDER BY payment_method",
+    "final_sql": "SELECT payment_method AS metodo_pago, COUNT(*) AS total_pagos_por_metodo FROM payments GROUP BY payment_method ORDER BY payment_method FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1459.9757090036292,
+      "evaluate": 48.08962500101188
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "oracle_direct",
+    "question_id": "q28",
+    "category": "agregacion",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "execution_error",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT to_char(AVG(p.paid_at) - i.issued_date, 'FM999990.99') AS average_days_between_issue_and_payment FROM invoices i JOIN payments p ON p.invoice_id = i.invoice_id WHERE i.status IN ('paid', 'overdue') GROUP BY i.customer_id;",
+    "final_sql": "SELECT TO_CHAR(AVG(p.paid_at) - i.issued_date, 'FM999990.99') AS average_days_between_issue_and_payment FROM invoices i JOIN payments p ON p.invoice_id = i.invoice_id WHERE i.status IN ('paid', 'overdue') GROUP BY i.customer_id FETCH FIRST 100 ROWS ONLY",
+    "error": "No se pudo ejecutar la consulta: ORA-00979: \"I\".\"ISSUED_DATE\": must appear in the GROUP BY clause or be used in an aggregate function\nHelp: https://docs.oracle.com/error-help/db/ora-00979/",
+    "error_code": "ORA-00979",
+    "timings_ms": {
+      "generate": 1961.5792600015993,
+      "evaluate": 50.66775700106518
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "oracle_direct",
+    "question_id": "q29",
+    "category": "join",
+    "difficulty": "dificil",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": true,
+    "raw_sql": "SELECT c.full_name, COUNT(i.invoice_id) AS total_invoices, SUM(CASE WHEN i.status = 'overdue' THEN 1 ELSE 0 END) AS overdue_invoices FROM customers c JOIN invoices i ON i.customer_id = c.customer_id WHERE i.customer_id IN (SELECT customer_id FROM invoices GROUP BY customer_id HAVING COUNT(invoice_id) > 10) GROUP BY c.full_name;",
+    "final_sql": "SELECT c.full_name, COUNT(i.invoice_id) AS total_invoices, SUM(CASE WHEN i.status = 'overdue' THEN 1 ELSE 0 END) AS overdue_invoices FROM customers c JOIN invoices i ON i.customer_id = c.customer_id WHERE i.customer_id IN (SELECT customer_id FROM invoices GROUP BY customer_id HAVING COUNT(invoice_id) > 10) GROUP BY c.full_name FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 2610.287930998311,
+      "evaluate": 58.53695200494258
+    }
+  },
+  {
+    "model": "sqlcoder",
+    "strategy": "oracle_direct",
+    "question_id": "q30",
+    "category": "subconsulta",
+    "difficulty": "dificil",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT c.full_name, COUNT(i.invoice_id) AS total_invoices, SUM(CASE WHEN p.payment_method IS NOT NULL THEN 1 ELSE 0 END) AS total_payments FROM customers c JOIN invoices i ON i.customer_id = c.customer_id LEFT JOIN payments p ON p.invoice_id = i.invoice_id AND p.paid_at <= CURRENT_DATE GROUP BY c.full_name HAVING COUNT(i.invoice_id) > SUM(CASE WHEN p.payment_method IS NOT NULL THEN 1 ELSE 0 END);",
+    "final_sql": "SELECT c.full_name, COUNT(i.invoice_id) AS total_invoices, SUM(CASE WHEN NOT p.payment_method IS NULL THEN 1 ELSE 0 END) AS total_payments FROM customers c JOIN invoices i ON i.customer_id = c.customer_id LEFT JOIN payments p ON p.invoice_id = i.invoice_id AND p.paid_at <= CURRENT_DATE GROUP BY c.full_name HAVING COUNT(i.invoice_id) > SUM(CASE WHEN NOT p.payment_method IS NULL THEN 1 ELSE 0 END) FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 3221.651831998315,
+      "evaluate": 59.14747199858539
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_direct",
+    "question_id": "q01",
+    "category": "conteo",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT COUNT(customer_id) AS total_customers\nFROM customers;",
+    "final_sql": "SELECT COUNT(customer_id) AS total_customers FROM customers LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 33020.0588680018,
+      "evaluate": 4.705961997387931
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_direct",
+    "question_id": "q02",
+    "category": "conteo",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT COUNT(*) AS total_facturas_vencidas\nFROM invoices\nWHERE status = 'overdue';",
+    "final_sql": "SELECT COUNT(*) AS total_facturas_vencidas FROM invoices WHERE status = 'overdue' LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 907.8371770010563,
+      "evaluate": 4.252761995303445
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_direct",
+    "question_id": "q03",
+    "category": "conteo",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT COUNT(*) AS total_customers\nFROM customers\nWHERE country = 'Colombia';",
+    "final_sql": "SELECT COUNT(*) AS total_customers FROM customers WHERE country = 'Colombia' LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 818.885697000951,
+      "evaluate": 3.136257000733167
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_direct",
+    "question_id": "q04",
+    "category": "agregacion",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT SUM(amount) AS total_amount\nFROM invoices\nWHERE currency = 'USD';",
+    "final_sql": "SELECT SUM(amount) AS total_amount FROM invoices WHERE currency = 'USD' LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 724.4912489986746,
+      "evaluate": 3.479581995634362
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_direct",
+    "question_id": "q05",
+    "category": "conteo",
+    "difficulty": "facil",
+    "original_question": 3,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT COUNT(*) AS total_pending_invoices\nFROM invoices\nWHERE status = 'pending';",
+    "final_sql": "SELECT COUNT(*) AS total_pending_invoices FROM invoices WHERE status = 'pending' LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 549.711709994881,
+      "evaluate": 3.5584069992182776
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_direct",
+    "question_id": "q06",
+    "category": "fechas",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT COUNT(*) AS total_facturas\nFROM invoices\nWHERE DATE_TRUNC('month', issued_date) = '2026-07-01'::date;",
+    "final_sql": "SELECT COUNT(*) AS total_facturas FROM invoices WHERE DATE_TRUNC('MONTH', issued_date) = CAST('2026-07-01' AS DATE) LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1146.580818000075,
+      "evaluate": 6.409321002138313
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_direct",
+    "question_id": "q07",
+    "category": "fechas",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT COUNT(*) AS total_facturas\nFROM invoices\nWHERE due_date BETWEEN '2026-10-01' AND '2026-10-31';",
+    "final_sql": "SELECT COUNT(*) AS total_facturas FROM invoices WHERE due_date BETWEEN '2026-10-01' AND '2026-10-31' LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1076.6624690004392,
+      "evaluate": 3.8557679945370182
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_direct",
+    "question_id": "q08",
+    "category": "fechas",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "execution_error",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT COUNT(*) AS total_customers_registered\nFROM customers\nWHERE EXTRACT(YEAR FROM registration_date) = 2025;",
+    "final_sql": "SELECT COUNT(*) AS total_customers_registered FROM customers WHERE EXTRACT(YEAR FROM registration_date) = 2025 LIMIT 100",
+    "error": "No se pudo ejecutar la consulta: column \"registration_date\" does not exist\nLINE 1: ...registered FROM customers WHERE EXTRACT(YEAR FROM registrati...\n                                                             ^\n",
+    "error_code": "UndefinedColumn",
+    "timings_ms": {
+      "generate": 813.7883020026493,
+      "evaluate": 3.5524630002328195
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_direct",
+    "question_id": "q09",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": 2,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT c.full_name, COALESCE(SUM(p.amount_paid), 0) AS total_paid\nFROM customers c\nJOIN invoices i ON i.customer_id = c.customer_id\nJOIN payments p ON p.invoice_id = i.invoice_id\nGROUP BY c.full_name\nORDER BY total_paid DESC\nLIMIT 5;",
+    "final_sql": "SELECT c.full_name, COALESCE(SUM(p.amount_paid), 0) AS total_paid FROM customers AS c JOIN invoices AS i ON i.customer_id = c.customer_id JOIN payments AS p ON p.invoice_id = i.invoice_id GROUP BY c.full_name ORDER BY total_paid DESC LIMIT 5",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1686.7553350020899,
+      "evaluate": 5.6065730022965
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_direct",
+    "question_id": "q10",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": 4,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT c.full_name, SUM(i.amount) AS total_overdue_amount\nFROM customers c\nJOIN invoices i ON i.customer_id = c.customer_id\nWHERE i.status = 'overdue'\nGROUP BY c.full_name\nORDER BY total_overdue_amount DESC\nLIMIT 10;",
+    "final_sql": "SELECT c.full_name, SUM(i.amount) AS total_overdue_amount FROM customers AS c JOIN invoices AS i ON i.customer_id = c.customer_id WHERE i.status = 'overdue' GROUP BY c.full_name ORDER BY total_overdue_amount DESC LIMIT 10",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1380.9852089980268,
+      "evaluate": 4.894124002021272
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_direct",
+    "question_id": "q11",
+    "category": "join",
+    "difficulty": "media",
+    "original_question": 5,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT ca.action_type, COUNT(*) AS action_count\nFROM collection_actions ca\nJOIN invoices i ON i.invoice_id = ca.invoice_id\nWHERE i.status = 'overdue'\nGROUP BY ca.action_type;",
+    "final_sql": "SELECT ca.action_type, COUNT(*) AS action_count FROM collection_actions AS ca JOIN invoices AS i ON i.invoice_id = ca.invoice_id WHERE i.status = 'overdue' GROUP BY ca.action_type LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1402.471356006572,
+      "evaluate": 4.437929004780017
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_direct",
+    "question_id": "q12",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": 10,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": true,
+    "raw_sql": "SELECT payment_method, COUNT(*) AS payment_count\nFROM payments\nGROUP BY payment_method\nORDER BY payment_count DESC\nLIMIT 1;",
+    "final_sql": "SELECT payment_method, COUNT(*) AS payment_count FROM payments GROUP BY payment_method ORDER BY payment_count DESC LIMIT 1",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1120.6510080010048,
+      "evaluate": 3.510497997922357
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_direct",
+    "question_id": "q13",
+    "category": "agrupacion",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT payment_method, COUNT(*) AS payment_count\nFROM payments\nGROUP BY payment_method;",
+    "final_sql": "SELECT payment_method, COUNT(*) AS payment_count FROM payments GROUP BY payment_method LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 631.4546920038993,
+      "evaluate": 4.342055995948613
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_direct",
+    "question_id": "q14",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": true,
+    "raw_sql": "SELECT country, COUNT(customer_id) AS customer_count\nFROM customers\nGROUP BY country\nORDER BY customer_count DESC\nLIMIT 1;",
+    "final_sql": "SELECT country, COUNT(customer_id) AS customer_count FROM customers GROUP BY country ORDER BY customer_count DESC LIMIT 1",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 795.1499190021423,
+      "evaluate": 3.6496959946816787
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_direct",
+    "question_id": "q15",
+    "category": "join",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT c.country, SUM(i.amount) AS total_overdue_invoices\nFROM customers c\nJOIN invoices i ON i.customer_id = c.customer_id\nWHERE i.status = 'overdue'\nGROUP BY c.country;",
+    "final_sql": "SELECT c.country, SUM(i.amount) AS total_overdue_invoices FROM customers AS c JOIN invoices AS i ON i.customer_id = c.customer_id WHERE i.status = 'overdue' GROUP BY c.country LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1324.7501169971656,
+      "evaluate": 4.477811002288945
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_direct",
+    "question_id": "q16",
+    "category": "fechas",
+    "difficulty": "dificil",
+    "original_question": 7,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT AVG(p.paid_at::date - i.issued_date) AS avg_days_between_issue_and_payment\nFROM invoices i\nJOIN payments p ON p.invoice_id = i.invoice_id;",
+    "final_sql": "SELECT AVG(CAST(p.paid_at AS DATE) - i.issued_date) AS avg_days_between_issue_and_payment FROM invoices AS i JOIN payments AS p ON p.invoice_id = i.invoice_id LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 965.6933920050506,
+      "evaluate": 4.245803000230808
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_direct",
+    "question_id": "q17",
+    "category": "agrupacion",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT currency, AVG(amount) AS average_amount\nFROM invoices\nGROUP BY currency;",
+    "final_sql": "SELECT currency, AVG(amount) AS average_amount FROM invoices GROUP BY currency LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 547.6476859985269,
+      "evaluate": 3.8918919963180088
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_direct",
+    "question_id": "q18",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT i.invoice_id, c.full_name, i.amount\nFROM invoices i\nJOIN customers c ON i.customer_id = c.customer_id\nORDER BY i.amount DESC\nLIMIT 1;",
+    "final_sql": "SELECT i.invoice_id, c.full_name, i.amount FROM invoices AS i JOIN customers AS c ON i.customer_id = c.customer_id ORDER BY i.amount DESC LIMIT 1",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1118.5144319970277,
+      "evaluate": 4.587302995787468
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_direct",
+    "question_id": "q19",
+    "category": "anti-join",
+    "difficulty": "dificil",
+    "original_question": 8,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT COUNT(c.customer_id) AS customers_without_payments\nFROM customers c\nWHERE c.customer_id NOT IN (SELECT i.customer_id FROM invoices i JOIN payments p ON p.invoice_id = i.invoice_id);",
+    "final_sql": "SELECT COUNT(c.customer_id) AS customers_without_payments FROM customers AS c WHERE NOT c.customer_id IN (SELECT i.customer_id FROM invoices AS i JOIN payments AS p ON p.invoice_id = i.invoice_id) LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1014.7726759969373,
+      "evaluate": 4.064139997353777
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_direct",
+    "question_id": "q20",
+    "category": "anti-join",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT COUNT(*) AS customers_without_invoices\nFROM customers\nWHERE customer_id NOT IN (SELECT customer_id FROM invoices);",
+    "final_sql": "SELECT COUNT(*) AS customers_without_invoices FROM customers WHERE NOT customer_id IN (SELECT customer_id FROM invoices) LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 677.0918109978084,
+      "evaluate": 3.794447999098338
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_direct",
+    "question_id": "q21",
+    "category": "fechas",
+    "difficulty": "dificil",
+    "original_question": 9,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT DATE_TRUNC('month', issued_date) AS mes, COUNT(*) AS total_facturas\nFROM invoices\nWHERE issued_date >= '2026-01-01' AND issued_date < '2027-01-01'\nGROUP BY DATE_TRUNC('month', issued_date)\nORDER BY mes;",
+    "final_sql": "SELECT DATE_TRUNC('MONTH', issued_date) AS mes, COUNT(*) AS total_facturas FROM invoices WHERE issued_date >= '2026-01-01' AND issued_date < '2027-01-01' GROUP BY DATE_TRUNC('MONTH', issued_date) ORDER BY mes LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1695.8822500018869,
+      "evaluate": 5.1029710011789575
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_direct",
+    "question_id": "q22",
+    "category": "subconsulta",
+    "difficulty": "media",
+    "original_question": 6,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT invoice_id, COUNT(*) AS payment_count\nFROM payments\nGROUP BY invoice_id\nHAVING COUNT(*) > 1;",
+    "final_sql": "SELECT invoice_id, COUNT(*) AS payment_count FROM payments GROUP BY invoice_id HAVING COUNT(*) > 1 LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 711.2055460020201,
+      "evaluate": 3.5856680042343214
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_direct",
+    "question_id": "q23",
+    "category": "fechas",
+    "difficulty": "dificil",
+    "original_question": 1,
+    "status": "execution_error",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT COUNT(*) AS total_facturas_vencidas_atrasadas\nFROM invoices\nWHERE status = 'overdue'\n  AND due_date <= '2026-10-01' - INTERVAL '60 days';",
+    "final_sql": "SELECT COUNT(*) AS total_facturas_vencidas_atrasadas FROM invoices WHERE status = 'overdue' AND due_date <= '2026-10-01' - INTERVAL '60 DAYS' LIMIT 100",
+    "error": "No se pudo ejecutar la consulta: invalid input syntax for type interval: \"2026-10-01\"\nLINE 1: ...invoices WHERE status = 'overdue' AND due_date <= '2026-10-0...\n                                                             ^\n",
+    "error_code": "InvalidDatetimeFormat",
+    "timings_ms": {
+      "generate": 1397.1621179953218,
+      "evaluate": 3.522172999510076
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_direct",
+    "question_id": "q24",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT c.full_name, COALESCE(SUM(p.amount_paid), 0) AS total_paid\nFROM customers c\nJOIN invoices i ON i.customer_id = c.customer_id\nJOIN payments p ON p.invoice_id = i.invoice_id\nGROUP BY c.full_name\nORDER BY total_paid DESC\nLIMIT 1;",
+    "final_sql": "SELECT c.full_name, COALESCE(SUM(p.amount_paid), 0) AS total_paid FROM customers AS c JOIN invoices AS i ON i.customer_id = c.customer_id JOIN payments AS p ON p.invoice_id = i.invoice_id GROUP BY c.full_name ORDER BY total_paid DESC LIMIT 1",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1791.1161689989967,
+      "evaluate": 4.605319001711905
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_direct",
+    "question_id": "q25",
+    "category": "estadistica",
+    "difficulty": "dificil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY amount) AS median_amount\nFROM invoices;",
+    "final_sql": "SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY amount) AS median_amount FROM invoices LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 717.8842579960474,
+      "evaluate": 3.640878996520769
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_direct",
+    "question_id": "q26",
+    "category": "ventana",
+    "difficulty": "dificil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT c.full_name, SUM(i.amount) AS total_amount\nFROM customers c\nJOIN invoices i ON i.customer_id = c.customer_id\nGROUP BY c.full_name\nORDER BY total_amount DESC\nLIMIT 3;",
+    "final_sql": "SELECT c.full_name, SUM(i.amount) AS total_amount FROM customers AS c JOIN invoices AS i ON i.customer_id = c.customer_id GROUP BY c.full_name ORDER BY total_amount DESC LIMIT 3",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1297.971182000765,
+      "evaluate": 3.8561550027225167
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_direct",
+    "question_id": "q27",
+    "category": "texto",
+    "difficulty": "dificil",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT DISTINCT payment_method\nFROM payments\nORDER BY payment_method;",
+    "final_sql": "SELECT DISTINCT payment_method FROM payments ORDER BY payment_method LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 744.0682289961842,
+      "evaluate": 3.689447999931872
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_direct",
+    "question_id": "q28",
+    "category": "agregacion",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT ROUND((COUNT(*) FILTER (WHERE status = 'paid')::decimal / COUNT(*)) * 100, 2) AS percentage_paid\nFROM invoices;",
+    "final_sql": "SELECT ROUND((CAST(COUNT(*) FILTER(WHERE status = 'paid') AS DECIMAL) / COUNT(*)) * 100, 2) AS percentage_paid FROM invoices LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 900.386930006789,
+      "evaluate": 4.652884999813978
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_direct",
+    "question_id": "q29",
+    "category": "join",
+    "difficulty": "dificil",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT c.full_name, COUNT(i.invoice_id) AS overdue_invoices_count\nFROM customers c\nJOIN invoices i ON i.customer_id = c.customer_id\nWHERE i.status = 'overdue'\nGROUP BY c.full_name\nHAVING COUNT(i.invoice_id) > 10;",
+    "final_sql": "SELECT c.full_name, COUNT(i.invoice_id) AS overdue_invoices_count FROM customers AS c JOIN invoices AS i ON i.customer_id = c.customer_id WHERE i.status = 'overdue' GROUP BY c.full_name HAVING COUNT(i.invoice_id) > 10 LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1524.1369270006544,
+      "evaluate": 4.005712995422073
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_direct",
+    "question_id": "q30",
+    "category": "subconsulta",
+    "difficulty": "dificil",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT COUNT(DISTINCT customer_id) AS customers_with_overdue_more_than_paid\nFROM invoices\nWHERE status = 'overdue'\nGROUP BY customer_id\nHAVING COUNT(*) > (SELECT COUNT(*) FROM invoices WHERE customer_id = invoices.customer_id AND status = 'paid');",
+    "final_sql": "SELECT COUNT(DISTINCT customer_id) AS customers_with_overdue_more_than_paid FROM invoices WHERE status = 'overdue' GROUP BY customer_id HAVING COUNT(*) > (SELECT COUNT(*) FROM invoices WHERE customer_id = invoices.customer_id AND status = 'paid') LIMIT 100",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1278.6911570001394,
+      "evaluate": 4.526546996203251
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_transpiled",
+    "question_id": "q01",
+    "category": "conteo",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT COUNT(customer_id) AS total_customers\nFROM customers;",
+    "final_sql": "SELECT COUNT(customer_id) AS total_customers FROM customers FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 700.4735020018416,
+      "evaluate": 51.19641600322211
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_transpiled",
+    "question_id": "q02",
+    "category": "conteo",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT COUNT(*) AS total_facturas_vencidas\nFROM invoices\nWHERE status = 'overdue';",
+    "final_sql": "SELECT COUNT(*) AS total_facturas_vencidas FROM invoices WHERE status = 'overdue' FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 788.3732199989026,
+      "evaluate": 48.36839600466192
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_transpiled",
+    "question_id": "q03",
+    "category": "conteo",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT COUNT(*) AS total_customers\nFROM customers\nWHERE country = 'Colombia';",
+    "final_sql": "SELECT COUNT(*) AS total_customers FROM customers WHERE country = 'Colombia' FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 623.3578459941782,
+      "evaluate": 44.62407000391977
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_transpiled",
+    "question_id": "q04",
+    "category": "agregacion",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT SUM(amount) AS total_amount\nFROM invoices\nWHERE currency = 'USD';",
+    "final_sql": "SELECT SUM(amount) AS total_amount FROM invoices WHERE currency = 'USD' FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 729.8802610021085,
+      "evaluate": 43.04497099656146
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_transpiled",
+    "question_id": "q05",
+    "category": "conteo",
+    "difficulty": "facil",
+    "original_question": 3,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT COUNT(*) AS total_pending_invoices\nFROM invoices\nWHERE status = 'pending';",
+    "final_sql": "SELECT COUNT(*) AS total_pending_invoices FROM invoices WHERE status = 'pending' FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 548.9475510039483,
+      "evaluate": 45.72477499459637
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_transpiled",
+    "question_id": "q06",
+    "category": "fechas",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "execution_error",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT COUNT(*) AS total_facturas\nFROM invoices\nWHERE DATE_TRUNC('month', issued_date) = '2026-07-01'::date;",
+    "final_sql": "SELECT COUNT(*) AS total_facturas FROM invoices WHERE TIMESTAMP_TRUNC(issued_date, MONTH) = CAST('2026-07-01' AS DATE) FETCH FIRST 100 ROWS ONLY",
+    "error": "No se pudo ejecutar la consulta: ORA-00904: \"TIMESTAMP_TRUNC\": invalid identifier\nHelp: https://docs.oracle.com/error-help/db/ora-00904/",
+    "error_code": "ORA-00904",
+    "timings_ms": {
+      "generate": 1012.8677719985717,
+      "evaluate": 39.98396600218257
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_transpiled",
+    "question_id": "q07",
+    "category": "fechas",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT COUNT(*) AS total_facturas\nFROM invoices\nWHERE due_date BETWEEN '2026-10-01' AND '2026-10-31';",
+    "final_sql": "SELECT COUNT(*) AS total_facturas FROM invoices WHERE due_date BETWEEN '2026-10-01' AND '2026-10-31' FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1066.7532329971436,
+      "evaluate": 43.64887799602002
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_transpiled",
+    "question_id": "q08",
+    "category": "fechas",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "execution_error",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT COUNT(*) AS total_customers_registered\nFROM customers\nWHERE EXTRACT(YEAR FROM registration_date) = 2025;",
+    "final_sql": "SELECT COUNT(*) AS total_customers_registered FROM customers WHERE EXTRACT(YEAR FROM registration_date) = 2025 FETCH FIRST 100 ROWS ONLY",
+    "error": "No se pudo ejecutar la consulta: ORA-00904: \"REGISTRATION_DATE\": invalid identifier\nHelp: https://docs.oracle.com/error-help/db/ora-00904/",
+    "error_code": "ORA-00904",
+    "timings_ms": {
+      "generate": 796.1984860012308,
+      "evaluate": 44.06396500417031
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_transpiled",
+    "question_id": "q09",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": 2,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT c.full_name, COALESCE(SUM(p.amount_paid), 0) AS total_paid\nFROM customers c\nJOIN invoices i ON i.customer_id = c.customer_id\nJOIN payments p ON p.invoice_id = i.invoice_id\nGROUP BY c.full_name\nORDER BY total_paid DESC\nLIMIT 5;",
+    "final_sql": "SELECT c.full_name, COALESCE(SUM(p.amount_paid), 0) AS total_paid FROM customers c JOIN invoices i ON i.customer_id = c.customer_id JOIN payments p ON p.invoice_id = i.invoice_id GROUP BY c.full_name ORDER BY total_paid DESC FETCH FIRST 5 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1687.1891470000264,
+      "evaluate": 47.28613299812423
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_transpiled",
+    "question_id": "q10",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": 4,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT c.full_name, SUM(i.amount) AS total_overdue_amount\nFROM customers c\nJOIN invoices i ON i.customer_id = c.customer_id\nWHERE i.status = 'overdue'\nGROUP BY c.full_name\nORDER BY total_overdue_amount DESC\nLIMIT 10;",
+    "final_sql": "SELECT c.full_name, SUM(i.amount) AS total_overdue_amount FROM customers c JOIN invoices i ON i.customer_id = c.customer_id WHERE i.status = 'overdue' GROUP BY c.full_name ORDER BY total_overdue_amount DESC FETCH FIRST 10 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1376.9920710037695,
+      "evaluate": 49.20044800383039
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_transpiled",
+    "question_id": "q11",
+    "category": "join",
+    "difficulty": "media",
+    "original_question": 5,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT ca.action_type, COUNT(*) AS action_count\nFROM collection_actions ca\nJOIN invoices i ON i.invoice_id = ca.invoice_id\nWHERE i.status = 'overdue'\nGROUP BY ca.action_type;",
+    "final_sql": "SELECT ca.action_type, COUNT(*) AS action_count FROM collection_actions ca JOIN invoices i ON i.invoice_id = ca.invoice_id WHERE i.status = 'overdue' GROUP BY ca.action_type FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1335.1461419952102,
+      "evaluate": 52.52851900149835
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_transpiled",
+    "question_id": "q12",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": 10,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": true,
+    "raw_sql": "SELECT payment_method, COUNT(*) AS payment_count\nFROM payments\nGROUP BY payment_method\nORDER BY payment_count DESC\nLIMIT 1;",
+    "final_sql": "SELECT payment_method, COUNT(*) AS payment_count FROM payments GROUP BY payment_method ORDER BY payment_count DESC FETCH FIRST 1 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 869.1851559997303,
+      "evaluate": 45.00559300504392
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_transpiled",
+    "question_id": "q13",
+    "category": "agrupacion",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT payment_method, COUNT(*) AS payment_count\nFROM payments\nGROUP BY payment_method;",
+    "final_sql": "SELECT payment_method, COUNT(*) AS payment_count FROM payments GROUP BY payment_method FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 618.8030060002347,
+      "evaluate": 40.01913499814691
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_transpiled",
+    "question_id": "q14",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": true,
+    "raw_sql": "SELECT country, COUNT(customer_id) AS customer_count\nFROM customers\nGROUP BY country\nORDER BY customer_count DESC\nLIMIT 1;",
+    "final_sql": "SELECT country, COUNT(customer_id) AS customer_count FROM customers GROUP BY country ORDER BY customer_count DESC FETCH FIRST 1 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 795.3200900010415,
+      "evaluate": 45.69106100097997
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_transpiled",
+    "question_id": "q15",
+    "category": "join",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT c.country, SUM(i.amount) AS total_overdue_invoices\nFROM customers c\nJOIN invoices i ON i.customer_id = c.customer_id\nWHERE i.status = 'overdue'\nGROUP BY c.country;",
+    "final_sql": "SELECT c.country, SUM(i.amount) AS total_overdue_invoices FROM customers c JOIN invoices i ON i.customer_id = c.customer_id WHERE i.status = 'overdue' GROUP BY c.country FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1183.0340020023868,
+      "evaluate": 48.69216099905316
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_transpiled",
+    "question_id": "q16",
+    "category": "fechas",
+    "difficulty": "dificil",
+    "original_question": 7,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT AVG(p.paid_at::date - i.issued_date) AS avg_days_between_issue_and_payment\nFROM invoices i\nJOIN payments p ON p.invoice_id = i.invoice_id;",
+    "final_sql": "SELECT AVG(CAST(p.paid_at AS DATE) - i.issued_date) AS avg_days_between_issue_and_payment FROM invoices i JOIN payments p ON p.invoice_id = i.invoice_id FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 964.102895995893,
+      "evaluate": 48.41786500037415
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_transpiled",
+    "question_id": "q17",
+    "category": "agrupacion",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT currency, AVG(amount) AS average_amount\nFROM invoices\nGROUP BY currency;",
+    "final_sql": "SELECT currency, AVG(amount) AS average_amount FROM invoices GROUP BY currency FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 559.0544950027834,
+      "evaluate": 44.565515003341716
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_transpiled",
+    "question_id": "q18",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT i.invoice_id, c.full_name, i.amount\nFROM invoices i\nJOIN customers c ON i.customer_id = c.customer_id\nORDER BY i.amount DESC\nLIMIT 1;",
+    "final_sql": "SELECT i.invoice_id, c.full_name, i.amount FROM invoices i JOIN customers c ON i.customer_id = c.customer_id ORDER BY i.amount DESC FETCH FIRST 1 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 974.8208669989253,
+      "evaluate": 47.066708000784274
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_transpiled",
+    "question_id": "q19",
+    "category": "anti-join",
+    "difficulty": "dificil",
+    "original_question": 8,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT COUNT(c.customer_id) AS customers_without_payments\nFROM customers c\nWHERE c.customer_id NOT IN (SELECT i.customer_id FROM invoices i JOIN payments p ON p.invoice_id = i.invoice_id);",
+    "final_sql": "SELECT COUNT(c.customer_id) AS customers_without_payments FROM customers c WHERE NOT c.customer_id IN (SELECT i.customer_id FROM invoices i JOIN payments p ON p.invoice_id = i.invoice_id) FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1021.9797629979439,
+      "evaluate": 52.208175002306234
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_transpiled",
+    "question_id": "q20",
+    "category": "anti-join",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT COUNT(*) AS customers_without_invoices\nFROM customers\nWHERE customer_id NOT IN (SELECT customer_id FROM invoices);",
+    "final_sql": "SELECT COUNT(*) AS customers_without_invoices FROM customers WHERE NOT customer_id IN (SELECT customer_id FROM invoices) FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 683.1362230004743,
+      "evaluate": 59.2480350023834
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_transpiled",
+    "question_id": "q21",
+    "category": "fechas",
+    "difficulty": "dificil",
+    "original_question": 9,
+    "status": "execution_error",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT DATE_TRUNC('month', issued_date) AS mes, COUNT(*) AS total_facturas\nFROM invoices\nWHERE issued_date >= '2026-01-01' AND issued_date < '2027-01-01'\nGROUP BY DATE_TRUNC('month', issued_date)\nORDER BY mes;",
+    "final_sql": "SELECT TIMESTAMP_TRUNC(issued_date, MONTH) AS mes, COUNT(*) AS total_facturas FROM invoices WHERE issued_date >= '2026-01-01' AND issued_date < '2027-01-01' GROUP BY TIMESTAMP_TRUNC(issued_date, MONTH) ORDER BY mes FETCH FIRST 100 ROWS ONLY",
+    "error": "No se pudo ejecutar la consulta: ORA-00904: \"TIMESTAMP_TRUNC\": invalid identifier\nHelp: https://docs.oracle.com/error-help/db/ora-00904/",
+    "error_code": "ORA-00904",
+    "timings_ms": {
+      "generate": 1722.5134129985236,
+      "evaluate": 40.683717001229525
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_transpiled",
+    "question_id": "q22",
+    "category": "subconsulta",
+    "difficulty": "media",
+    "original_question": 6,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT invoice_id, COUNT(*) AS payment_count\nFROM payments\nGROUP BY invoice_id\nHAVING COUNT(*) > 1;",
+    "final_sql": "SELECT invoice_id, COUNT(*) AS payment_count FROM payments GROUP BY invoice_id HAVING COUNT(*) > 1 FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 708.326138999837,
+      "evaluate": 49.339801000314765
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_transpiled",
+    "question_id": "q23",
+    "category": "fechas",
+    "difficulty": "dificil",
+    "original_question": 1,
+    "status": "execution_error",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT COUNT(*) AS total_facturas_vencidas_atrasadas\nFROM invoices\nWHERE status = 'overdue'\n  AND due_date <= '2026-10-01' - INTERVAL '60 days';",
+    "final_sql": "SELECT COUNT(*) AS total_facturas_vencidas_atrasadas FROM invoices WHERE status = 'overdue' AND due_date <= '2026-10-01' - INTERVAL '60' DAYS FETCH FIRST 100 ROWS ONLY",
+    "error": "No se pudo ejecutar la consulta: ORA-30089: missing or invalid <datetime field>\nHelp: https://docs.oracle.com/error-help/db/ora-30089/",
+    "error_code": "ORA-30089",
+    "timings_ms": {
+      "generate": 1138.5450760062668,
+      "evaluate": 52.30832099914551
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_transpiled",
+    "question_id": "q24",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT c.full_name, COALESCE(SUM(p.amount_paid), 0) AS total_paid\nFROM customers c\nJOIN invoices i ON i.customer_id = c.customer_id\nJOIN payments p ON p.invoice_id = i.invoice_id\nGROUP BY c.full_name\nORDER BY total_paid DESC\nLIMIT 1;",
+    "final_sql": "SELECT c.full_name, COALESCE(SUM(p.amount_paid), 0) AS total_paid FROM customers c JOIN invoices i ON i.customer_id = c.customer_id JOIN payments p ON p.invoice_id = i.invoice_id GROUP BY c.full_name ORDER BY total_paid DESC FETCH FIRST 1 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1474.6536409948021,
+      "evaluate": 53.56364599720109
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_transpiled",
+    "question_id": "q25",
+    "category": "estadistica",
+    "difficulty": "dificil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY amount) AS median_amount\nFROM invoices;",
+    "final_sql": "SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY amount) AS median_amount FROM invoices FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 701.8740389976301,
+      "evaluate": 46.10852400219301
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_transpiled",
+    "question_id": "q26",
+    "category": "ventana",
+    "difficulty": "dificil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT c.full_name, SUM(i.amount) AS total_amount\nFROM customers c\nJOIN invoices i ON i.customer_id = c.customer_id\nGROUP BY c.full_name\nORDER BY total_amount DESC\nLIMIT 3;",
+    "final_sql": "SELECT c.full_name, SUM(i.amount) AS total_amount FROM customers c JOIN invoices i ON i.customer_id = c.customer_id GROUP BY c.full_name ORDER BY total_amount DESC FETCH FIRST 3 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1297.2112869974808,
+      "evaluate": 48.09208599908743
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_transpiled",
+    "question_id": "q27",
+    "category": "texto",
+    "difficulty": "dificil",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT DISTINCT payment_method\nFROM payments\nORDER BY payment_method;",
+    "final_sql": "SELECT DISTINCT payment_method FROM payments ORDER BY payment_method FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 742.821443003777,
+      "evaluate": 43.39512300066417
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_transpiled",
+    "question_id": "q28",
+    "category": "agregacion",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT ROUND((COUNT(*) FILTER (WHERE status = 'paid')::decimal / COUNT(*)) * 100, 2) AS percentage_paid\nFROM invoices;",
+    "final_sql": "SELECT ROUND((CAST(COUNT(*) FILTER(WHERE status = 'paid') AS NUMBER) / COUNT(*)) * 100, 2) AS percentage_paid FROM invoices FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 904.6485479993862,
+      "evaluate": 53.18854099459713
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_transpiled",
+    "question_id": "q29",
+    "category": "join",
+    "difficulty": "dificil",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT c.full_name, COUNT(i.invoice_id) AS overdue_invoices_count\nFROM customers c\nJOIN invoices i ON i.customer_id = c.customer_id\nWHERE i.status = 'overdue'\nGROUP BY c.full_name\nHAVING COUNT(i.invoice_id) > 10;",
+    "final_sql": "SELECT c.full_name, COUNT(i.invoice_id) AS overdue_invoices_count FROM customers c JOIN invoices i ON i.customer_id = c.customer_id WHERE i.status = 'overdue' GROUP BY c.full_name HAVING COUNT(i.invoice_id) > 10 FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1445.365703999414,
+      "evaluate": 62.34973699611146
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "pg_transpiled",
+    "question_id": "q30",
+    "category": "subconsulta",
+    "difficulty": "dificil",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT COUNT(DISTINCT customer_id) AS customers_with_overdue_more_than_paid\nFROM invoices\nWHERE status = 'overdue'\nGROUP BY customer_id\nHAVING COUNT(*) > (SELECT COUNT(*) FROM invoices WHERE customer_id = invoices.customer_id AND status = 'paid');",
+    "final_sql": "SELECT COUNT(DISTINCT customer_id) AS customers_with_overdue_more_than_paid FROM invoices WHERE status = 'overdue' GROUP BY customer_id HAVING COUNT(*) > (SELECT COUNT(*) FROM invoices WHERE customer_id = invoices.customer_id AND status = 'paid') FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1315.592163002293,
+      "evaluate": 48.73685399797978
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "oracle_direct",
+    "question_id": "q01",
+    "category": "conteo",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT COUNT(customer_id) AS total_customers\nFROM customers",
+    "final_sql": "SELECT COUNT(customer_id) AS total_customers FROM customers FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 813.0780360006611,
+      "evaluate": 45.277552999323234
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "oracle_direct",
+    "question_id": "q02",
+    "category": "conteo",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT COUNT(*) AS total_facturas_vencidas\nFROM invoices\nWHERE status = 'overdue'",
+    "final_sql": "SELECT COUNT(*) AS total_facturas_vencidas FROM invoices WHERE status = 'overdue' FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 936.0545730014564,
+      "evaluate": 62.30932100152131
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "oracle_direct",
+    "question_id": "q03",
+    "category": "conteo",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT COUNT(*) AS total_customers\nFROM customers\nWHERE country = 'Colombia'",
+    "final_sql": "SELECT COUNT(*) AS total_customers FROM customers WHERE country = 'Colombia' FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 837.491376005346,
+      "evaluate": 44.93688399816165
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "oracle_direct",
+    "question_id": "q04",
+    "category": "agregacion",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT SUM(amount) AS total_amount\nFROM invoices\nWHERE currency = 'USD'",
+    "final_sql": "SELECT SUM(amount) AS total_amount FROM invoices WHERE currency = 'USD' FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 859.914362001291,
+      "evaluate": 44.12427099305205
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "oracle_direct",
+    "question_id": "q05",
+    "category": "conteo",
+    "difficulty": "facil",
+    "original_question": 3,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT COUNT(*) AS total_facturas_pendientes\nFROM invoices\nWHERE status = 'pending'",
+    "final_sql": "SELECT COUNT(*) AS total_facturas_pendientes FROM invoices WHERE status = 'pending' FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 627.7526290068636,
+      "evaluate": 83.03075400181115
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "oracle_direct",
+    "question_id": "q06",
+    "category": "fechas",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT COUNT(*) AS total_facturas\nFROM invoices\nWHERE TRUNC(issued_date, 'MM') = TO_DATE('2026-07-01', 'YYYY-MM-DD')",
+    "final_sql": "SELECT COUNT(*) AS total_facturas FROM invoices WHERE TRUNC(issued_date, 'MM') = TO_DATE('2026-07-01', 'YYYY-MM-DD') FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1282.6741780008888,
+      "evaluate": 105.53508199518546
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "oracle_direct",
+    "question_id": "q07",
+    "category": "fechas",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT COUNT(*) AS total_facturas\nFROM invoices\nWHERE due_date BETWEEN TO_DATE('2026-10-01', 'YYYY-MM-DD') AND TO_DATE('2026-10-31', 'YYYY-MM-DD')",
+    "final_sql": "SELECT COUNT(*) AS total_facturas FROM invoices WHERE due_date BETWEEN TO_DATE('2026-10-01', 'YYYY-MM-DD') AND TO_DATE('2026-10-31', 'YYYY-MM-DD') FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1414.7283139973297,
+      "evaluate": 73.94323300104588
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "oracle_direct",
+    "question_id": "q08",
+    "category": "fechas",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "execution_error",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT COUNT(*) AS total_customers_registered\nFROM customers\nWHERE EXTRACT(YEAR FROM registration_date) = 2025",
+    "final_sql": "SELECT COUNT(*) AS total_customers_registered FROM customers WHERE EXTRACT(YEAR FROM registration_date) = 2025 FETCH FIRST 100 ROWS ONLY",
+    "error": "No se pudo ejecutar la consulta: ORA-00904: \"REGISTRATION_DATE\": invalid identifier\nHelp: https://docs.oracle.com/error-help/db/ora-00904/",
+    "error_code": "ORA-00904",
+    "timings_ms": {
+      "generate": 875.2159810028388,
+      "evaluate": 47.29739000322297
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "oracle_direct",
+    "question_id": "q09",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": 2,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT c.full_name, COALESCE(SUM(p.amount_paid), 0) AS total_paid\nFROM customers c\nJOIN invoices i ON i.customer_id = c.customer_id\nJOIN payments p ON p.invoice_id = i.invoice_id\nGROUP BY c.full_name\nORDER BY total_paid DESC\nFETCH FIRST 5 ROWS ONLY",
+    "final_sql": "SELECT c.full_name, COALESCE(SUM(p.amount_paid), 0) AS total_paid FROM customers c JOIN invoices i ON i.customer_id = c.customer_id JOIN payments p ON p.invoice_id = i.invoice_id GROUP BY c.full_name ORDER BY total_paid DESC FETCH FIRST 5 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1901.15603000595,
+      "evaluate": 47.212952995323576
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "oracle_direct",
+    "question_id": "q10",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": 4,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT c.full_name, SUM(i.amount) AS total_overdue_amount\nFROM customers c\nJOIN invoices i ON i.customer_id = c.customer_id\nWHERE i.status = 'overdue'\nGROUP BY c.full_name\nORDER BY total_overdue_amount DESC\nFETCH FIRST 10 ROWS ONLY",
+    "final_sql": "SELECT c.full_name, SUM(i.amount) AS total_overdue_amount FROM customers c JOIN invoices i ON i.customer_id = c.customer_id WHERE i.status = 'overdue' GROUP BY c.full_name ORDER BY total_overdue_amount DESC FETCH FIRST 10 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1549.1504859965062,
+      "evaluate": 55.008654002449475
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "oracle_direct",
+    "question_id": "q11",
+    "category": "join",
+    "difficulty": "media",
+    "original_question": 5,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT action_type, COUNT(*) AS total_actions\nFROM collection_actions ca\nJOIN invoices i ON i.invoice_id = ca.invoice_id\nWHERE i.status = 'overdue'\nGROUP BY action_type\nORDER BY action_type",
+    "final_sql": "SELECT action_type, COUNT(*) AS total_actions FROM collection_actions ca JOIN invoices i ON i.invoice_id = ca.invoice_id WHERE i.status = 'overdue' GROUP BY action_type ORDER BY action_type FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1483.634960000927,
+      "evaluate": 55.249134995392524
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "oracle_direct",
+    "question_id": "q12",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": 10,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": true,
+    "raw_sql": "SELECT payment_method, COUNT(*) AS payment_count\nFROM payments\nGROUP BY payment_method\nORDER BY payment_count DESC\nFETCH FIRST 1 ROW ONLY",
+    "final_sql": "SELECT payment_method, COUNT(*) AS payment_count FROM payments GROUP BY payment_method ORDER BY payment_count DESC FETCH FIRST 1 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1216.7400170001201,
+      "evaluate": 46.68826600391185
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "oracle_direct",
+    "question_id": "q13",
+    "category": "agrupacion",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT payment_method, COUNT(*) AS total_payments\nFROM payments\nGROUP BY payment_method\nORDER BY total_payments DESC",
+    "final_sql": "SELECT payment_method, COUNT(*) AS total_payments FROM payments GROUP BY payment_method ORDER BY total_payments DESC FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 729.9461090005934,
+      "evaluate": 95.30798000196228
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "oracle_direct",
+    "question_id": "q14",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": true,
+    "raw_sql": "SELECT country, COUNT(*) AS customer_count\nFROM customers\nGROUP BY country\nORDER BY customer_count DESC\nFETCH FIRST 1 ROW ONLY",
+    "final_sql": "SELECT country, COUNT(*) AS customer_count FROM customers GROUP BY country ORDER BY customer_count DESC FETCH FIRST 1 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1088.19296600268,
+      "evaluate": 58.002044999739155
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "oracle_direct",
+    "question_id": "q15",
+    "category": "join",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT c.country, SUM(i.amount) AS total_overdue_invoices\nFROM customers c\nJOIN invoices i ON i.customer_id = c.customer_id\nWHERE i.status = 'overdue'\nGROUP BY c.country",
+    "final_sql": "SELECT c.country, SUM(i.amount) AS total_overdue_invoices FROM customers c JOIN invoices i ON i.customer_id = c.customer_id WHERE i.status = 'overdue' GROUP BY c.country FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1363.74400400382,
+      "evaluate": 70.81317100528395
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "oracle_direct",
+    "question_id": "q16",
+    "category": "fechas",
+    "difficulty": "dificil",
+    "original_question": 7,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT AVG(TRUNC(p.paid_at) - i.issued_date) AS avg_days_between_issue_and_payment\nFROM invoices i\nJOIN payments p ON p.invoice_id = i.invoice_id",
+    "final_sql": "SELECT AVG(TRUNC(p.paid_at, 'DD') - i.issued_date) AS avg_days_between_issue_and_payment FROM invoices i JOIN payments p ON p.invoice_id = i.invoice_id FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1169.4818409960135,
+      "evaluate": 75.34848700015573
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "oracle_direct",
+    "question_id": "q17",
+    "category": "agrupacion",
+    "difficulty": "facil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT currency, AVG(amount) AS average_amount\nFROM invoices\nGROUP BY currency",
+    "final_sql": "SELECT currency, AVG(amount) AS average_amount FROM invoices GROUP BY currency FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 523.6568260006607,
+      "evaluate": 50.22461699991254
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "oracle_direct",
+    "question_id": "q18",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT i.invoice_id, c.full_name, i.amount\nFROM invoices i\nJOIN customers c ON i.customer_id = c.customer_id\nORDER BY i.amount DESC\nFETCH FIRST 1 ROWS ONLY",
+    "final_sql": "SELECT i.invoice_id, c.full_name, i.amount FROM invoices i JOIN customers c ON i.customer_id = c.customer_id ORDER BY i.amount DESC FETCH FIRST 1 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1245.215905000805,
+      "evaluate": 55.33372000354575
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "oracle_direct",
+    "question_id": "q19",
+    "category": "anti-join",
+    "difficulty": "dificil",
+    "original_question": 8,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT COUNT(c.customer_id) AS customers_without_payments\nFROM customers c\nWHERE c.customer_id NOT IN (\n    SELECT i.customer_id\n    FROM invoices i\n    JOIN payments p ON p.invoice_id = i.invoice_id\n)",
+    "final_sql": "SELECT COUNT(c.customer_id) AS customers_without_payments FROM customers c WHERE NOT c.customer_id IN (SELECT i.customer_id FROM invoices i JOIN payments p ON p.invoice_id = i.invoice_id) FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1327.9915200037067,
+      "evaluate": 42.52870799973607
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "oracle_direct",
+    "question_id": "q20",
+    "category": "anti-join",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT COUNT(*) AS customers_without_invoices\nFROM customers c\nWHERE c.customer_id NOT IN (SELECT i.customer_id FROM invoices i)",
+    "final_sql": "SELECT COUNT(*) AS customers_without_invoices FROM customers c WHERE NOT c.customer_id IN (SELECT i.customer_id FROM invoices i) FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 932.6599639971391,
+      "evaluate": 56.06225399969844
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "oracle_direct",
+    "question_id": "q21",
+    "category": "fechas",
+    "difficulty": "dificil",
+    "original_question": 9,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT TRUNC(issued_date, 'MM') AS mes, COUNT(*) AS total_facturas\nFROM invoices\nWHERE EXTRACT(YEAR FROM issued_date) = 2026\nGROUP BY TRUNC(issued_date, 'MM')\nORDER BY mes",
+    "final_sql": "SELECT TRUNC(issued_date, 'MM') AS mes, COUNT(*) AS total_facturas FROM invoices WHERE EXTRACT(YEAR FROM issued_date) = 2026 GROUP BY TRUNC(issued_date, 'MM') ORDER BY mes FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1539.080930997443,
+      "evaluate": 79.98562599823344
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "oracle_direct",
+    "question_id": "q22",
+    "category": "subconsulta",
+    "difficulty": "media",
+    "original_question": 6,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT invoice_id, COUNT(*) AS payment_count\nFROM payments\nGROUP BY invoice_id\nHAVING COUNT(*) > 1",
+    "final_sql": "SELECT invoice_id, COUNT(*) AS payment_count FROM payments GROUP BY invoice_id HAVING COUNT(*) > 1 FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 957.1836359973531,
+      "evaluate": 45.41808999783825
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "oracle_direct",
+    "question_id": "q23",
+    "category": "fechas",
+    "difficulty": "dificil",
+    "original_question": 1,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT COUNT(*) AS total_facturas_vencidas_atrasadas\nFROM invoices\nWHERE status = 'overdue'\n  AND due_date <= ADD_MONTHS(TRUNC(TO_DATE('2026-10-01', 'YYYY-MM-DD'), 'MM'), -60)",
+    "final_sql": "SELECT COUNT(*) AS total_facturas_vencidas_atrasadas FROM invoices WHERE status = 'overdue' AND due_date <= ADD_MONTHS(TRUNC(TO_DATE('2026-10-01', 'YYYY-MM-DD'), 'MM'), -60) FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1741.7071790041518,
+      "evaluate": 81.2331500055734
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "oracle_direct",
+    "question_id": "q24",
+    "category": "top-n",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT c.full_name, COALESCE(SUM(p.amount_paid), 0) AS total_paid\nFROM customers c\nJOIN invoices i ON i.customer_id = c.customer_id\nJOIN payments p ON p.invoice_id = i.invoice_id\nGROUP BY c.full_name\nORDER BY total_paid DESC\nFETCH FIRST 1 ROW ONLY",
+    "final_sql": "SELECT c.full_name, COALESCE(SUM(p.amount_paid), 0) AS total_paid FROM customers c JOIN invoices i ON i.customer_id = c.customer_id JOIN payments p ON p.invoice_id = i.invoice_id GROUP BY c.full_name ORDER BY total_paid DESC FETCH FIRST 1 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1831.2176789986552,
+      "evaluate": 124.76148600399029
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "oracle_direct",
+    "question_id": "q25",
+    "category": "estadistica",
+    "difficulty": "dificil",
+    "original_question": null,
+    "status": "firewall_rejected",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT AVG(amount) AS median_amount\nFROM (\n    SELECT amount\n    FROM invoices\n    ORDER BY amount\n    CONNECT BY LEVEL <= (SELECT COUNT(*) FROM invoices)\n    START WITH ROWNUM = (SELECT (COUNT(*) + 1) / 2 FROM invoices)\n    AND PRIOR amount IS NOT NULL\n    AND PRIOR SYS_GUID() IS NOT NULL\n)\nWHERE ROWNUM <= 2",
+    "final_sql": null,
+    "error": "Error al parsear SQL: ParseError",
+    "error_code": null,
+    "timings_ms": {
+      "generate": 2267.3090749958646,
+      "evaluate": 1.2297930006752722
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "oracle_direct",
+    "question_id": "q26",
+    "category": "ventana",
+    "difficulty": "dificil",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT c.full_name, SUM(i.amount) AS total_amount\nFROM customers c\nJOIN invoices i ON i.customer_id = c.customer_id\nGROUP BY c.full_name\nORDER BY total_amount DESC\nFETCH FIRST 3 ROWS ONLY",
+    "final_sql": "SELECT c.full_name, SUM(i.amount) AS total_amount FROM customers c JOIN invoices i ON i.customer_id = c.customer_id GROUP BY c.full_name ORDER BY total_amount DESC FETCH FIRST 3 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1440.715930002625,
+      "evaluate": 73.02950799930841
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "oracle_direct",
+    "question_id": "q27",
+    "category": "texto",
+    "difficulty": "dificil",
+    "original_question": null,
+    "status": "execution_error",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT LISTAGG(payment_method, ', ') WITHIN GROUP (ORDER BY payment_method) AS payment_methods\nFROM payments",
+    "final_sql": "SELECT LISTAGG(payment_method, ', ') WITHIN GROUP (ORDER BY payment_method) AS payment_methods FROM payments FETCH FIRST 100 ROWS ONLY",
+    "error": "No se pudo ejecutar la consulta: ORA-01489: result of string concatenation is too long\nHelp: https://docs.oracle.com/error-help/db/ora-01489/",
+    "error_code": "ORA-01489",
+    "timings_ms": {
+      "generate": 1029.040799003269,
+      "evaluate": 53.96966399712255
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "oracle_direct",
+    "question_id": "q28",
+    "category": "agregacion",
+    "difficulty": "media",
+    "original_question": null,
+    "status": "correct",
+    "strict": true,
+    "relaxed": true,
+    "raw_sql": "SELECT ROUND(SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) / COUNT(*) * 100, 2) AS percentage_paid\nFROM invoices",
+    "final_sql": "SELECT ROUND(SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) / COUNT(*) * 100, 2) AS percentage_paid FROM invoices FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1203.9731740005664,
+      "evaluate": 50.67619500186993
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "oracle_direct",
+    "question_id": "q29",
+    "category": "join",
+    "difficulty": "dificil",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT c.full_name, COUNT(i.invoice_id) AS total_overdue_invoices\nFROM customers c\nJOIN invoices i ON i.customer_id = c.customer_id\nWHERE i.status = 'overdue'\nGROUP BY c.full_name\nHAVING COUNT(i.invoice_id) > 10\nORDER BY total_overdue_invoices DESC",
+    "final_sql": "SELECT c.full_name, COUNT(i.invoice_id) AS total_overdue_invoices FROM customers c JOIN invoices i ON i.customer_id = c.customer_id WHERE i.status = 'overdue' GROUP BY c.full_name HAVING COUNT(i.invoice_id) > 10 ORDER BY total_overdue_invoices DESC FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1622.8644530056044,
+      "evaluate": 63.85484800557606
+    }
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "strategy": "oracle_direct",
+    "question_id": "q30",
+    "category": "subconsulta",
+    "difficulty": "dificil",
+    "original_question": null,
+    "status": "wrong",
+    "strict": false,
+    "relaxed": false,
+    "raw_sql": "SELECT COUNT(*) AS num_customers_with_overdue_more_than_paid\nFROM (\n    SELECT customer_id\n    FROM invoices\n    WHERE status = 'overdue'\n    GROUP BY customer_id\n    HAVING COUNT(*) > (\n        SELECT COUNT(*)\n        FROM invoices\n        WHERE customer_id = invoices.customer_id AND status = 'paid'\n    )\n)",
+    "final_sql": "SELECT COUNT(*) AS num_customers_with_overdue_more_than_paid FROM (SELECT customer_id FROM invoices WHERE status = 'overdue' GROUP BY customer_id HAVING COUNT(*) > (SELECT COUNT(*) FROM invoices WHERE customer_id = invoices.customer_id AND status = 'paid')) FETCH FIRST 100 ROWS ONLY",
+    "error": null,
+    "error_code": null,
+    "timings_ms": {
+      "generate": 1803.3959889944526,
+      "evaluate": 48.56710600142833
+    }
+  }
+]
