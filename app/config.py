@@ -18,6 +18,7 @@ class Settings:
     query_timeout_seconds: int = int(os.getenv("QUERY_TIMEOUT_SECONDS", "5"))
     max_question_chars: int = int(os.getenv("MAX_QUESTION_CHARS", "500"))
     allowed_schema: str = os.getenv("ALLOWED_SCHEMA", "public")
+    target_dialect: str = os.getenv("TARGET_DIALECT", "postgres")
 
     db_pool_size: int = int(os.getenv("DB_POOL_SIZE", "5"))
     db_max_overflow: int = int(os.getenv("DB_MAX_OVERFLOW", "10"))

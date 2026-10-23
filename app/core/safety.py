@@ -75,6 +75,15 @@ DANGEROUS_KEYWORD_COLUMNS: set[str] = {
 DANGEROUS_FUNCTION_PREFIXES = ("pg_", "lo_", "txid_", "dblink")
 DANGEROUS_FUNCTION_PATTERNS = ("_to_xml",)
 
+ORACLE_DANGEROUS_FUNCTIONS = {
+    "sys_context", "userenv", "xmltype", "extractvalue", "xmlquery",
+    "xmlsequence", "httpuritype", "uritype", "dburitype", "xdburitype",
+}
+ORACLE_SEQUENCE_PSEUDOCOLUMNS = {"nextval", "currval"}
+ORACLE_IDENTITY_PSEUDOCOLUMNS = {
+    "user", "uid", "ora_database_name", "ora_login_user", "ora_instance_num", "ora_client_ip_address",
+}
+
 # Tope para OFFSET: un desplazamiento enorme fuerza escaneos largos sobre la tabla
 # (DoS leve). Se aplica a todos los nodos OFFSET del AST, incluidas subconsultas y CTEs.
 MAX_OFFSET = 10_000
@@ -94,6 +103,13 @@ class TableNotAllowedError(UnsafeQueryError):
 
 class DangerousFunctionError(UnsafeQueryError):
     """Se lanza cuando la consulta intenta invocar funciones de sistema peligrosas."""
+
+
+def _resolve_dialect(dialect: str | None) -> str:
+    resolved = settings.target_dialect if dialect is None else dialect
+    if isinstance(resolved, str) and resolved.lower() in {"postgres", "oracle"}:
+        return resolved.lower()
+    raise ValueError(f"Dialecto no soportado: {resolved!r}")
 
 
 def is_safe_select(sql: str) -> bool:
@@ -163,6 +179,60 @@ def check_dangerous_functions(statement: exp.Expression) -> None:
             )
 
 
+def check_oracle_safety(statement: exp.Expression) -> None:
+    """Aplica restricciones específicas del dialecto Oracle."""
+    for dot in statement.find_all(exp.Dot):
+        if isinstance(dot.expression, exp.Func):
+            raise DangerousFunctionError("No se permiten llamadas a funciones calificadas en Oracle")
+
+    for func in statement.find_all(exp.Func):
+        raw_name = func.name if isinstance(func, exp.Anonymous) else func.sql_name()
+        func_name = (raw_name or "").strip('"').lower()
+        if func_name in ORACLE_DANGEROUS_FUNCTIONS:
+            raise DangerousFunctionError(f"Función bloqueada por seguridad: '{func_name}'")
+
+    # Tablas y alias de tabla declarados. Los alias de COLUMNA no cuentan: `SELECT 1 AS pkg, pkg.f`
+    # seguiría llamando al paquete `pkg`.
+    declared: set[str] = set()
+    for node in statement.walk():
+        if isinstance(node, exp.Table) and node.name:
+            declared.add(node.name.lower())
+            declared.add(node.alias_or_name.lower())
+        elif isinstance(node, (exp.Subquery, exp.CTE)) and node.alias:
+            declared.add(node.alias.lower())
+
+    for column in statement.find_all(exp.Column):
+        # Una función de paquete sin argumentos se llama sin paréntesis (UTL_INADDR.GET_HOST_NAME) y
+        # sqlglot la parsea como columna calificada: si el calificador no es una tabla ni un alias
+        # declarados en la consulta, es un paquete.
+        if column.table and column.table.lower() not in declared:
+            raise DangerousFunctionError(
+                f"Función bloqueada por seguridad: calificador no declarado '{column.table}'"
+            )
+        column_name = (column.name or "").strip('"').lower()
+        if column_name in ORACLE_SEQUENCE_PSEUDOCOLUMNS:
+            raise DangerousFunctionError(f"Pseudocolumna bloqueada por seguridad: '{column_name}'")
+        if not column.table and column_name in ORACLE_IDENTITY_PSEUDOCOLUMNS:
+            raise DangerousFunctionError(f"Pseudocolumna bloqueada por seguridad: '{column_name}'")
+
+    for table in statement.find_all(exp.Table):
+        if not isinstance(table.this, exp.Identifier):
+            raise UnsafeQueryError("No se permiten funciones de tabla en Oracle")
+
+    # XMLTYPE también se puede construir con CAST(... AS XMLTYPE), sin pasar por la función.
+    for data_type in statement.find_all(exp.DataType):
+        if data_type.sql(dialect="oracle").upper().startswith("XMLTYPE"):
+            raise DangerousFunctionError("Tipo bloqueado por seguridad: 'xmltype'")
+
+    # CONNECT BY LEVEL <= N es un generador de filas (bomba de recursos) y ninguna tabla de la lista
+    # blanca es jerárquica: se rechaza por defecto.
+    if statement.find(exp.Connect) is not None:
+        raise UnsafeQueryError("No se permiten consultas jerárquicas (CONNECT BY) en Oracle")
+
+    if any(True for _ in statement.find_all((exp.Placeholder, exp.Parameter))):
+        raise UnsafeQueryError("No se permiten variables ligadas en Oracle")
+
+
 def check_offset_limit(statement: exp.Expression) -> None:
     """Verifica que todo OFFSET del AST sea un entero no negativo menor o igual a MAX_OFFSET."""
     for offset in statement.find_all(exp.Offset):
@@ -173,7 +243,10 @@ def check_offset_limit(statement: exp.Expression) -> None:
             raise UnsafeQueryError(f"OFFSET excede el máximo permitido ({MAX_OFFSET})")
 
 
-def validate_ast(sql: str, allowed_tables: set[str] | None = None, allowed_schema: str | None = None) -> exp.Select:
+def validate_ast(
+    sql: str, allowed_tables: set[str] | None = None, allowed_schema: str | None = None,
+    dialect: str | None = None,
+) -> exp.Select:
     """
     Parsea y valida el AST de la consulta contra todas las reglas del cortafuegos semántico.
     Devuelve el objeto AST parseado si pasa todas las validaciones.
@@ -181,13 +254,15 @@ def validate_ast(sql: str, allowed_tables: set[str] | None = None, allowed_schem
     if not isinstance(sql, str):
         raise UnsafeQueryError("La consulta debe ser texto (str)")
 
+    dialect = _resolve_dialect(dialect)
+
     if allowed_tables is None:
         allowed_tables = DEFAULT_ALLOWED_TABLES
     if allowed_schema is None:
         allowed_schema = settings.allowed_schema
 
     try:
-        statements = [s for s in sqlglot.parse(sql, dialect="postgres") if s is not None]
+        statements = [s for s in sqlglot.parse(sql, dialect=dialect) if s is not None]
     except Exception as err:
         raise UnsafeQueryError(f"Error al parsear SQL: {type(err).__name__}") from err
 
@@ -215,6 +290,8 @@ def validate_ast(sql: str, allowed_tables: set[str] | None = None, allowed_schem
 
         check_table_whitelist(statement, allowed_tables, allowed_schema)
         check_dangerous_functions(statement)
+        if dialect == "oracle":
+            check_oracle_safety(statement)
         check_offset_limit(statement)
     except UnsafeQueryError:
         raise
@@ -224,32 +301,59 @@ def validate_ast(sql: str, allowed_tables: set[str] | None = None, allowed_schem
     return statement
 
 
-def enforce_limit(sql: str, max_rows: int) -> str:
-    """Agrega un LIMIT si el SQL generado no tiene uno, o lo recorta si supera max_rows."""
-    statement = sqlglot.parse_one(sql, dialect="postgres")
+def enforce_limit(sql: str, max_rows: int, dialect: str | None = None) -> str:
+    """Agrega o normaliza el límite de filas usando el dialecto seleccionado."""
+    dialect = _resolve_dialect(dialect)
+    statement = sqlglot.parse_one(sql, dialect=dialect)
+
+    if dialect == "oracle":
+        for select in statement.find_all(exp.Select):
+            select.set("hint", None)
+        if isinstance(statement, exp.Select):
+            statement.set("hint", None)
+        existing_limit = statement.args.get("limit")
+        if isinstance(existing_limit, exp.Fetch):
+            count = existing_limit.args.get("count")
+            usable = isinstance(count, exp.Literal) and count.is_int
+            try:
+                count_value = int(count.this) if usable else None
+            except (ValueError, TypeError):
+                count_value = None
+            if (not usable or count_value is None or count_value > max_rows
+                    or existing_limit.args.get("percent")):
+                count = exp.Literal.number(max_rows)
+            existing_limit.set("count", count)
+            existing_limit.set("percent", False)
+            existing_limit.set("with_ties", False)
+        else:
+            # Sin límite, o con uno que no es un FETCH reconocible: se aplica el tope (fail-closed).
+            statement.set("limit", exp.Fetch(direction="FIRST", count=exp.Literal.number(max_rows)))
+        return statement.sql(dialect=dialect)
 
     existing_limit = statement.args.get("limit")
     if existing_limit is not None:
         try:
             current_value = int(existing_limit.expression.this)
             if current_value <= max_rows:
-                return statement.sql(dialect="postgres")
+                return statement.sql(dialect=dialect)
         except (ValueError, TypeError, AttributeError):
             # Si el LIMIT es 'ALL', 'NULL' o una expresión no entera, se sobreescribe de forma segura
             pass
 
     statement = statement.limit(max_rows)
-    return statement.sql(dialect="postgres")
+    return statement.sql(dialect=dialect)
 
 
 
 def validate_and_prepare(
-    sql: str, max_rows: int, allowed_tables: set[str] | None = None, allowed_schema: str | None = None
+    sql: str, max_rows: int, allowed_tables: set[str] | None = None, allowed_schema: str | None = None,
+    dialect: str | None = None,
 ) -> str:
     """Punto de entrada único: valida el AST contra el cortafuegos y aplica el límite seguro."""
-    statement = validate_ast(sql, allowed_tables, allowed_schema)
+    dialect = _resolve_dialect(dialect)
+    statement = validate_ast(sql, allowed_tables, allowed_schema, dialect)
     try:
-        return enforce_limit(statement.sql(dialect="postgres"), max_rows)
+        return enforce_limit(statement.sql(dialect=dialect), max_rows, dialect)
     except UnsafeQueryError:
         raise
     except Exception as err:

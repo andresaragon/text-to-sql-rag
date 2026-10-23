@@ -157,6 +157,7 @@ La aplicación se configura mediante variables de entorno (o archivo `.env`):
 | `EMBEDDING_MODEL` | `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` | Modelo SentenceTransformer para embeddings de esquema. |
 | `MAX_ROWS_RETURNED` | `100` | Límite máximo de filas permitidas por consulta (forzado por guardrail AST). |
 | `ALLOWED_SCHEMA` | `public` | Único esquema permitido para tablas calificadas (`esquema.tabla`); los nombres sin calificar no se ven afectados. No distingue mayúsculas. |
+| `TARGET_DIALECT` | `postgres` | Dialecto SQL del cortafuegos: `postgres` u `oracle` (sin distinguir mayúsculas). Con `oracle` solo se valida el SQL; la ejecución contra Oracle aún no está implementada. Ver [docs/oracle-firewall.md](docs/oracle-firewall.md). |
 | `QUERY_TIMEOUT_SECONDS` | `5` | Timeout de ejecución de la query en Postgres (segundos). |
 
 ---
@@ -193,6 +194,7 @@ En su lugar, **`app/core/safety.py` descompone la consulta en un Árbol de Sinta
 3. **Clamping de filas (`LIMIT`):** Si la consulta no tiene `LIMIT`, se le inyecta automáticamente. Si solicita más filas que el máximo configurado, se recorta a dicho tope.
 4. **Timeouts en motor:** Inyección de `statement_timeout` para neutralizar consultas desbocadas o scans completos en tablas masivas.
 5. **Lista blanca de tablas y esquema:** Las tablas sin calificar se validan contra la lista blanca. Las tablas calificadas (`esquema.tabla`) solo se permiten si el esquema es `ALLOWED_SCHEMA` (por defecto `public`, sin distinguir mayúsculas); los nombres de 3 partes (`catálogo.esquema.tabla`) se rechazan siempre.
+6. **Dialecto Oracle (`TARGET_DIALECT=oracle`):** valida SQL Oracle con reglas propias (llamadas calificadas por paquete, secuencias, funciones de información y XML, db links, funciones de tabla, hints, `FETCH` con `PERCENT`/`WITH TIES`, variables ligadas). Ver la tabla de amenazas en [docs/oracle-firewall.md](docs/oracle-firewall.md). Aviso: la ejecución contra Oracle (driver, timeouts) aún no está implementada; por ahora solo se valida el SQL.
 
 ---
 
