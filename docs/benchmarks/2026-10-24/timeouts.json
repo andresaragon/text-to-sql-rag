@@ -1,0 +1,56 @@
+[
+  {
+    "case": "unreachable_host",
+    "timeout_s": 2,
+    "seconds": 3.04,
+    "outcome": "DatabaseUnavailableError"
+  },
+  {
+    "case": "reference",
+    "timeout_s": 2,
+    "seconds": 0.03,
+    "outcome": "ok, 1 rows"
+  },
+  {
+    "case": "recursive_order_by",
+    "timeout_s": 2,
+    "seconds": 2.06,
+    "outcome": "QueryTimeoutError"
+  },
+  {
+    "case": "recursive_count",
+    "timeout_s": 2,
+    "seconds": 2.06,
+    "outcome": "QueryTimeoutError"
+  },
+  {
+    "case": "recursive_stream",
+    "timeout_s": 2,
+    "seconds": 0.04,
+    "outcome": "ok, 100 rows"
+  },
+  {
+    "case": "reference",
+    "timeout_s": 10,
+    "seconds": 0.03,
+    "outcome": "ok, 1 rows"
+  },
+  {
+    "case": "recursive_order_by",
+    "timeout_s": 10,
+    "seconds": 10.21,
+    "outcome": "QueryTimeoutError"
+  },
+  {
+    "case": "recursive_count",
+    "timeout_s": 10,
+    "seconds": 10.08,
+    "outcome": "QueryTimeoutError"
+  },
+  {
+    "case": "recursive_stream",
+    "timeout_s": 10,
+    "seconds": 0.04,
+    "outcome": "ok, 100 rows"
+  }
+]
