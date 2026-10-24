@@ -10,7 +10,7 @@ from typing import Any
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import bindparam, create_engine, event, text
 from sqlalchemy.engine import Engine
-from sqlalchemy.exc import DBAPIError, OperationalError
+from sqlalchemy.exc import DBAPIError, OperationalError, SQLAlchemyError
 
 from app.config import settings
 
@@ -34,6 +34,8 @@ _QUERY_CANCELED_SQLSTATE = "57014"
 # o arrancando. Sin pgcode = el error es del cliente psycopg2 (no pudo conectar o
 # perdió la conexión), así que también cuenta como base no disponible.
 _UNAVAILABLE_SQLSTATE_PREFIXES = ("08", "53", "57P01", "57P02", "57P03")
+
+_monotonic = time.monotonic
 
 _ORACLE_SCHEMA_REGEX = re.compile(r"^[A-Za-z][A-Za-z0-9_$#]*$")
 _ORACLE_UNAVAILABLE_CODES = {
@@ -183,11 +185,22 @@ def _is_unavailable(exc: OperationalError) -> bool:
     return pgcode is None or pgcode.startswith(_UNAVAILABLE_SQLSTATE_PREFIXES)
 
 
+def _oracle_is_reachable(engine: Engine) -> bool:
+    """True si una conexión nueva responde: separa un corte por call_timeout de una caída."""
+    try:
+        with engine.connect() as conn:
+            conn.exec_driver_sql("SELECT 1 FROM dual")
+        return True
+    except SQLAlchemyError:
+        return False
+
+
 def execute_select(sql: str) -> list[dict]:
     """Ejecuta un SELECT ya validado y devuelve las filas como lista de dicts."""
     if settings.target_dialect.strip().lower() == "oracle":
         max_retries = 5
         for attempt in range(max_retries + 1):
+            started = _monotonic()
             try:
                 engine = _target_engine()
                 with engine.connect() as conn, conn.begin():
@@ -207,6 +220,14 @@ def execute_select(sql: str) -> list[dict]:
                 if code == "ORA-01466" and attempt < max_retries:
                     time.sleep(1)
                     continue
+                if (
+                    code == "DPY-4011"
+                    and _monotonic() - started >= settings.query_timeout_seconds
+                    and _oracle_is_reachable(engine)
+                ):
+                    raise QueryTimeoutError(
+                        "La consulta tardó demasiado, intenta ser más específico."
+                    ) from exc
                 mapped = map_oracle_error(exc)
                 raise mapped from exc
 
