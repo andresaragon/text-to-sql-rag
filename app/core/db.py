@@ -38,6 +38,9 @@ _UNAVAILABLE_SQLSTATE_PREFIXES = ("08", "53", "57P01", "57P02", "57P03")
 _monotonic = time.monotonic
 
 _ORACLE_SCHEMA_REGEX = re.compile(r"^[A-Za-z][A-Za-z0-9_$#]*$")
+# DPY-4024: el driver agotó call_timeout. ORA-01013: la llamada fue cancelada; el único que cancela
+# aquí es call_timeout (se vio al agotarse durante un fetch).
+_ORACLE_TIMEOUT_CODES = {"DPY-4024", "ORA-01013"}
 _ORACLE_UNAVAILABLE_CODES = {
     "ORA-01017",
     "ORA-01033",
@@ -156,7 +159,7 @@ def map_oracle_error(exc: Exception) -> Exception:
     if code is None and hasattr(orig, "full_code"):
         code = orig.full_code
 
-    if code == "DPY-4024":
+    if code in _ORACLE_TIMEOUT_CODES:
         return QueryTimeoutError("La consulta tardó demasiado, intenta ser más específico.")
 
     if code in _ORACLE_UNAVAILABLE_CODES or (isinstance(code, str) and code.startswith("DPY-6")):

@@ -70,7 +70,7 @@ def wrapped(code, message="boom"):
     return DatabaseError("SELECT 1 FROM dual", {}, FakeOraError(code, message))
 
 
-TIMEOUT_CODES = ["DPY-4024"]
+TIMEOUT_CODES = ["DPY-4024", "ORA-01013"]
 UNAVAILABLE_CODES = [
     "ORA-01017", "ORA-01033", "ORA-01034", "ORA-01089", "ORA-03113", "ORA-03114", "ORA-03135",
     "ORA-12154", "ORA-12170", "ORA-12514", "ORA-12516", "ORA-12519", "ORA-12537", "ORA-12541",
