@@ -78,6 +78,7 @@ DANGEROUS_FUNCTION_PATTERNS = ("_to_xml",)
 ORACLE_DANGEROUS_FUNCTIONS = {
     "sys_context", "userenv", "xmltype", "extractvalue", "xmlquery",
     "xmlsequence", "httpuritype", "uritype", "dburitype", "xdburitype",
+    "dbms_random", "rand",
 }
 ORACLE_SEQUENCE_PSEUDOCOLUMNS = {"nextval", "currval"}
 ORACLE_IDENTITY_PSEUDOCOLUMNS = {
@@ -319,12 +320,48 @@ def enforce_limit(sql: str, max_rows: int, dialect: str | None = None) -> str:
                 count_value = int(count.this) if usable else None
             except (ValueError, TypeError):
                 count_value = None
-            if (not usable or count_value is None or count_value > max_rows
-                    or existing_limit.args.get("percent")):
+
+            limit_options = existing_limit.args.get("limit_options")
+            has_percent = bool(existing_limit.args.get("percent"))
+            unrecognized_option = False
+
+            if limit_options is not None:
+                if isinstance(limit_options, exp.Expression):
+                    if limit_options.args.get("percent"):
+                        has_percent = True
+                    known_lo_keys = {"percent", "rows", "with_ties"}
+                    if any(
+                        v is not None and v is not False
+                        for k, v in limit_options.args.items()
+                        if k not in known_lo_keys
+                    ):
+                        unrecognized_option = True
+                else:
+                    unrecognized_option = True
+
+            known_fetch_keys = {"direction", "count", "percent", "with_ties", "limit_options"}
+            if any(
+                v is not None and v is not False
+                for k, v in existing_limit.args.items()
+                if k not in known_fetch_keys
+            ):
+                unrecognized_option = True
+
+            if (
+                not usable
+                or count_value is None
+                or count_value > max_rows
+                or has_percent
+                or unrecognized_option
+            ):
                 count = exp.Literal.number(max_rows)
+
             existing_limit.set("count", count)
             existing_limit.set("percent", False)
             existing_limit.set("with_ties", False)
+            if isinstance(limit_options, exp.Expression):
+                limit_options.set("percent", False)
+                limit_options.set("with_ties", False)
         else:
             # Sin límite, o con uno que no es un FETCH reconocible: se aplica el tope (fail-closed).
             statement.set("limit", exp.Fetch(direction="FIRST", count=exp.Literal.number(max_rows)))
