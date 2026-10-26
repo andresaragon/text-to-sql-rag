@@ -2,13 +2,13 @@
 
 *[English](query-timeouts.md)*
 
-[text-to-sql-rag](https://github.com/andresaragon/text-to-sql-rag) ejecuta SQL que escribió un modelo de lenguaje, así que «¿qué pasa si la base está caída, o la consulta no termina nunca?» no es un caso raro. Lo medí en vez de leer la documentación del driver y confiar en ella. Dos cosas que daba por ciertas eran falsas, y una que no pude reproducir queda documentada como tal.
+[text-to-sql-rag](https://github.com/andresaragon/text-to-sql-rag) ejecuta SQL que escribió un modelo de lenguaje, así que «¿qué pasa si la base está caída, o la consulta no termina nunca?» no es un caso raro. Lo medí en vez de dar por buenos los valores por defecto. Dos cosas que daba por ciertas eran falsas, y una que no pude reproducir queda documentada como tal.
 
 Todo corrió en un portátil con WSL2 (RTX 4060, Docker), Postgres 16 con pgvector, Oracle Free 23ai (`gvenzl/oracle-free:23.26.3-slim-faststart`) y `oracledb` en modo thin. Las corridas de Oracle se reproducen con `python -m scripts.bench_timeouts` y están guardadas en [`docs/benchmarks/2026-10-24/timeouts.json`](../benchmarks/2026-10-24/timeouts.json).
 
 ## 1. La base es inalcanzable
 
-El 2026-10-15 apunté el servicio a una IP que no responde (`10.255.255.1`) y mandé un `POST /query`:
+El 2026-10-15 apunté el servicio, corriendo sobre Postgres, a una IP que no responde (`10.255.255.1`) y mandé un `POST /query`:
 
 | | Respuesta | Tiempo |
 |---|---|---|
@@ -29,17 +29,17 @@ El cortafuegos deja pasar una CTE recursiva, porque no usa ninguna construcción
 |---|---|---|
 | CTE recursiva, `ORDER BY n DESC` | 2,06 s, `QueryTimeoutError` (504) | 10,21 s, `QueryTimeoutError` |
 | CTE recursiva, `COUNT(*)` | 2,06 s, `QueryTimeoutError` | 10,08 s, `QueryTimeoutError` |
-| CTE recursiva, `SELECT n` simple | 0,03 s, 100 filas | 0,03 s, 100 filas |
+| CTE recursiva, `SELECT n` simple | 0,04 s, 100 filas | 0,04 s, 100 filas |
 
-La tercera fila no es el timeout funcionando: el cortafuegos añade `FETCH FIRST 100 ROWS ONLY`, y los 0,03 s muestran que Oracle deja de generar filas al llegar a 100. Las dos primeras tienen que materializar o agregar todo, así que ningún tope de filas ayuda y solo las detiene el timeout.
+La tercera fila no es el timeout funcionando: el cortafuegos añade `FETCH FIRST 100 ROWS ONLY`, y los 0,04 s son coherentes con que Oracle deje de generar filas al llegar a 100. Las dos primeras tienen que materializar o agregar todo, así que ningún tope de filas ayuda y solo las detiene el timeout.
 
-En todas mis corridas por el pipeline, el corte con un timeout de 2 s cayó entre 2,02 y 2,07 s. Con 10 s cayó entre **10,05 y 11,73 s** (ocho observaciones: 10,05, 10,08, 10,09, 10,14, 10,21, 10,24, 11,07 y 11,73). El timeout es lo más pronto que se puede cortar la llamada, no cuándo se corta. Un cliente que ponga su propio plazo con ese mismo valor se rendirá antes.
+En todas mis corridas por el pipeline, el corte con un timeout de 2 s cayó entre 2,02 y 2,07 s. Con 10 s cayó entre **10,05 y 11,73 s** (ocho observaciones: 10,05, 10,08, 10,09, 10,14, 10,21, 10,24, 11,07 y 11,73). El `timeouts.json` guardado contiene una de estas corridas; el resto viene de corridas anteriores que no están en el repositorio. El timeout es lo más pronto que se puede cortar la llamada, no cuándo se corta. Un cliente que ponga su propio plazo con ese mismo valor se rendirá antes.
 
 ## 3. El hallazgo que fue un error mío
 
 Mi primera medición llamó a `execute_select` directamente con la misma CTE que devuelve filas. Con un timeout de 2 s tardó **19,8 s** y terminó con `ORA-01013` (la llamada fue cancelada), que el servicio mapeaba a «no se pudo ejecutar» (400) en vez de «demasiado lenta» (504). Con 10 s seguía ejecutándose después de más de siete minutos y la maté.
 
-Parecía que «el timeout no funciona». No era así: en el pipeline la misma consulta termina en 0,03 s por el tope de filas. Pero el mecanismo es real y conviene conocerlo: el `call_timeout` del driver se aplica a **cada viaje de ida y vuelta** a la base, no a la sentencia. Una sentencia que entrega filas tan rápido que cada lectura termina dentro del timeout nunca se corta, por larga que sea la secuencia completa. En este servicio lo que acota es el tope de filas, no el timeout, así que quien reutilice `execute_select` fuera del cortafuegos hereda una llamada sin límite. El servicio ahora mapea también `ORA-01013` a 504, porque lo único que cancela llamadas aquí es el timeout, y la documentación lo dice.
+Parecía que «el timeout no funciona». No era así: en el pipeline la misma consulta termina en 0,04 s por el tope de filas. Pero el mecanismo es real y conviene conocerlo: el `call_timeout` del driver se aplica a **cada viaje de ida y vuelta** a la base, no a la sentencia. Una sentencia que entrega filas tan rápido que cada lectura termina dentro del timeout nunca se corta, por larga que sea la secuencia completa. En este servicio lo que acota es el tope de filas, no el timeout, así que quien reutilice `execute_select` fuera del cortafuegos hereda una llamada sin límite. El servicio ahora mapea también `ORA-01013` a 504, porque lo único configurado para cancelar llamadas aquí es el timeout, y la documentación lo dice.
 
 ## 4. El código de error que significa dos cosas
 

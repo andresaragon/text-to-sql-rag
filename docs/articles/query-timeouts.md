@@ -2,13 +2,13 @@
 
 *[Español](query-timeouts.es.md)*
 
-[text-to-sql-rag](https://github.com/andresaragon/text-to-sql-rag) runs SQL that a language model wrote, so "what happens when the database is down, or the query never ends?" is not an edge case. I measured it instead of reading the driver documentation and trusting it. Two things I assumed were wrong, and one thing I could not reproduce is documented as such.
+[text-to-sql-rag](https://github.com/andresaragon/text-to-sql-rag) runs SQL that a language model wrote, so "what happens when the database is down, or the query never ends?" is not an edge case. I measured it instead of taking the defaults on trust. Two things I assumed were wrong, and one thing I could not reproduce is documented as such.
 
 Everything below ran on a laptop under WSL2 (RTX 4060, Docker), Postgres 16 with pgvector, Oracle Free 23ai (`gvenzl/oracle-free:23.26.3-slim-faststart`), `oracledb` in thin mode. The Oracle runs are reproducible with `python -m scripts.bench_timeouts` and are saved in [`docs/benchmarks/2026-10-24/timeouts.json`](../benchmarks/2026-10-24/timeouts.json).
 
 ## 1. The database is unreachable
 
-On 2026-10-15 I pointed the service at an IP that does not answer (`10.255.255.1`) and sent one `POST /query`:
+On 2026-10-15 I pointed the service, running on Postgres, at an IP that does not answer (`10.255.255.1`) and sent one `POST /query`:
 
 | | Response | Time |
 |---|---|---|
@@ -29,17 +29,17 @@ The firewall lets a recursive CTE through, because it uses no banned construct. 
 |---|---|---|
 | Recursive CTE, `ORDER BY n DESC` | 2.06 s, `QueryTimeoutError` (504) | 10.21 s, `QueryTimeoutError` |
 | Recursive CTE, `COUNT(*)` | 2.06 s, `QueryTimeoutError` | 10.08 s, `QueryTimeoutError` |
-| Recursive CTE, plain `SELECT n` | 0.03 s, 100 rows | 0.03 s, 100 rows |
+| Recursive CTE, plain `SELECT n` | 0.04 s, 100 rows | 0.04 s, 100 rows |
 
-The third row is not the timeout working: the firewall appends `FETCH FIRST 100 ROWS ONLY`, and the 0.03 s shows that Oracle stops generating rows once it has 100. The first two have to materialize or aggregate everything, so no row cap helps, and only the timeout stops them.
+The third row is not the timeout working: the firewall appends `FETCH FIRST 100 ROWS ONLY`, and the 0.04 s is consistent with Oracle stopping once it has 100 rows. The first two have to materialize or aggregate everything, so no row cap helps, and only the timeout stops them.
 
-Across all my runs with the pipeline, the cut for a 2 s timeout landed between 2.02 and 2.07 s. For a 10 s timeout it landed between **10.05 and 11.73 s** (eight observations: 10.05, 10.08, 10.09, 10.14, 10.21, 10.24, 11.07, 11.73). The timeout is the earliest the call can be cut, not the time it will be cut. A client that sets its own deadline at the same value will give up first.
+Across all my runs with the pipeline, the cut for a 2 s timeout landed between 2.02 and 2.07 s. For a 10 s timeout it landed between **10.05 and 11.73 s** (eight observations: 10.05, 10.08, 10.09, 10.14, 10.21, 10.24, 11.07, 11.73). The saved `timeouts.json` holds one run of these; the rest come from earlier runs that are not in the repository. The timeout is the earliest the call can be cut, not the time it will be cut. A client that sets its own deadline at the same value will give up first.
 
 ## 3. The finding that was my own mistake
 
 My first measurement called `execute_select` directly with the same CTE returning rows. With a 2 s timeout it ran **19.8 s** and ended with `ORA-01013` (the call was cancelled), which the service mapped to "could not execute" (400) rather than "too slow" (504). With a 10 s timeout it was still running after more than seven minutes and I killed it.
 
-That looked like "the timeout does not work". It was not: in the pipeline the same query ends in 0.03 s because of the row cap. But the mechanism is real, and it is worth knowing: the driver's `call_timeout` applies to **each round trip** to the database, not to the statement. A statement that streams rows fast enough that every fetch finishes inside the timeout is never cut, however long the whole stream takes. In this service the row cap is what bounds it, not the timeout, so anyone who reuses `execute_select` outside the firewall inherits an unbounded call. The service now maps `ORA-01013` to 504 as well, since the only thing cancelling calls here is the timeout, and the documentation says so.
+That looked like "the timeout does not work". It was not: in the pipeline the same query ends in 0.04 s because of the row cap. But the mechanism is real, and it is worth knowing: the driver's `call_timeout` applies to **each round trip** to the database, not to the statement. A statement that streams rows fast enough that every fetch finishes inside the timeout is never cut, however long the whole stream takes. In this service the row cap is what bounds it, not the timeout, so anyone who reuses `execute_select` outside the firewall inherits an unbounded call. The service now maps `ORA-01013` to 504 as well, since the only thing configured to cancel calls here is the timeout, and the documentation says so.
 
 ## 4. The error code that means two things
 
