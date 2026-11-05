@@ -194,6 +194,9 @@ The application is configured using environment variables (or a `.env` file):
 | `ALLOWED_SCHEMA` | `public` | Only schema allowed for schema-qualified table names (`schema.table`); unqualified names are not affected. Case-insensitive. |
 | `TARGET_DIALECT` | `postgres` | SQL dialect used by the firewall: `postgres` or `oracle` (case-insensitive). With `oracle` only SQL is validated; executing queries against Oracle (driver, timeouts) is not implemented yet. See [docs/oracle-firewall.md](docs/oracle-firewall.md). |
 | `QUERY_TIMEOUT_SECONDS` | `5` | Query execution timeout in seconds. |
+| `SCHEMA_CHECK_INTERVAL_SECONDS` | `0` | Opt-in. `0` = off. When `> 0`, `/query` checks at most once per interval whether `schema_embeddings` was reindexed (`count(*)` + `max(id)`) and, if so, clears the retrieval cache, so answers do not go stale until Uvicorn restarts. Never raises: if the check fails it does nothing. Each worker checks on its own. |
+| `FUNCTION_POLICY` | `denylist` | `denylist` (default, unchanged) or `allowlist`. With `allowlist` the firewall only accepts the functions in `ALLOWED_FUNCTIONS` (`app/core/safety.py`) plus `ALLOWED_FUNCTIONS_EXTRA`; the denylist still runs first. Any other value rejects every query (fail-closed). |
+| `ALLOWED_FUNCTIONS_EXTRA` | _(empty)_ | Comma-separated function names added to the allowlist when `FUNCTION_POLICY=allowlist` (e.g. Oracle-specific ones). It can never reopen a function the denylist blocks. |
 
 ---
 

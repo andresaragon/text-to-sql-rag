@@ -18,17 +18,60 @@ en la descripción de collection_actions) para que el retrieval sea
 robusto sin depender de subir top_k.
 """
 
+import logging
+import time
 from dataclasses import dataclass
 from functools import lru_cache
 
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import bindparam, text
+from sqlalchemy.exc import SQLAlchemyError
 
+from app.config import settings
 from app.core.db import _engine
 from app.core.embeddings import embed_text
 
 # Debe coincidir con schema_embeddings.embedding vector(384) en db/schema.sql
 _EMBEDDING_DIM = 384
+_last_fingerprint: str | None = None
+_last_check_at: float | None = None
+logger = logging.getLogger(__name__)
+
+
+def schema_fingerprint() -> str:
+    """Devuelve una huella barata del índice de esquema."""
+    with _engine.connect() as conn:
+        count, max_id = conn.execute(
+            text("SELECT count(*), coalesce(max(id), 0) FROM schema_embeddings")
+        ).one()
+    return f"{count}:{max_id}"
+
+
+def invalidate_if_reindexed(now: float | None = None) -> bool:
+    """Limpia la caché de retrieval si cambió el índice desde el último chequeo."""
+    global _last_fingerprint, _last_check_at
+
+    interval = settings.schema_check_interval_seconds
+    if interval <= 0:
+        return False
+
+    checked_at = time.monotonic() if now is None else now
+    if _last_check_at is not None and checked_at - _last_check_at < interval:
+        return False
+
+    try:
+        fingerprint = schema_fingerprint()
+    except (SQLAlchemyError, OSError, ValueError, TypeError) as exc:
+        logger.warning("No se pudo comprobar la huella del esquema (%s)", type(exc).__name__)
+        return False
+
+    changed = _last_fingerprint is not None and fingerprint != _last_fingerprint
+    _last_check_at = checked_at
+    _last_fingerprint = fingerprint
+    if changed:
+        retrieve_relevant_schema.cache_clear()
+        return True
+    return False
 
 
 @dataclass(frozen=True)
