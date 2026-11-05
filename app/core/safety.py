@@ -75,6 +75,20 @@ DANGEROUS_KEYWORD_COLUMNS: set[str] = {
 DANGEROUS_FUNCTION_PREFIXES = ("pg_", "lo_", "txid_", "dblink")
 DANGEROUS_FUNCTION_PATTERNS = ("_to_xml",)
 
+ALLOWED_FUNCTIONS: frozenset[str] = frozenset({
+    "count", "sum", "avg", "min", "max", "array_agg", "jsonb_agg", "group_concat",
+    "string_agg", "bool_or", "bool_and", "logical_or", "logical_and", "percentile_cont",
+    "percentile_disc", "row_number", "rank", "dense_rank", "ntile", "lag", "lead",
+    "first_value", "last_value", "nth_value", "case", "if", "cast", "try_cast",
+    "coalesce", "nullif", "greatest", "least", "extract", "date_trunc", "timestamp_trunc",
+    "to_char", "time_to_str", "age", "make_date", "str_to_date", "unix_to_time",
+    "current_date", "current_timestamp", "now", "date_part", "abs", "ceil", "ceiling",
+    "floor", "round", "power", "sqrt", "mod", "sign", "trunc", "lower", "upper",
+    "initcap", "trim", "ltrim", "rtrim", "length", "substring", "substr", "left", "right",
+    "replace", "concat", "concat_ws", "split_part", "regexp_replace", "md5", "array",
+    "explode", "unnest", "generate_series", "jsonb_build_object", "exists", "any", "all",
+})
+
 ORACLE_DANGEROUS_FUNCTIONS = {
     "sys_context", "userenv", "xmltype", "extractvalue", "xmlquery",
     "xmlsequence", "httpuritype", "uritype", "dburitype", "xdburitype",
@@ -104,6 +118,44 @@ class TableNotAllowedError(UnsafeQueryError):
 
 class DangerousFunctionError(UnsafeQueryError):
     """Se lanza cuando la consulta intenta invocar funciones de sistema peligrosas."""
+
+
+def _function_name(func: exp.Func) -> str:
+    """Devuelve el nombre normalizado usado por las políticas de funciones."""
+    raw_name = func.name if isinstance(func, exp.Anonymous) else func.sql_name()
+    return (raw_name or "").strip('"').lower().rsplit(".", 1)[-1]
+
+
+def _function_policy() -> str:
+    """Lee y valida la política de funciones configurada para esta llamada."""
+    import os
+
+    policy = os.getenv("FUNCTION_POLICY", "").strip().lower() or "denylist"
+    if policy not in {"denylist", "allowlist"}:
+        raise ValueError(f"Política de funciones no soportada: {policy!r}")
+    return policy
+
+
+def _allowed_extra_functions() -> frozenset[str]:
+    """Lee funciones adicionales permitidas, normalizadas desde el entorno."""
+    import os
+
+    return frozenset(
+        name.strip().lower()
+        for name in os.getenv("ALLOWED_FUNCTIONS_EXTRA", "").split(",")
+        if name.strip()
+    )
+
+
+def check_function_allowlist(statement: exp.Expression) -> None:
+    """Rechaza funciones que no estén en la lista blanca configurada."""
+    allowed = ALLOWED_FUNCTIONS | _allowed_extra_functions()
+    for func in statement.find_all(exp.Func):
+        func_name = _function_name(func)
+        if func_name not in allowed:
+            raise DangerousFunctionError(
+                f"Función no permitida por la política allowlist: '{func_name}'"
+            )
 
 
 def _resolve_dialect(dialect: str | None) -> str:
@@ -156,10 +208,7 @@ def check_table_whitelist(statement: exp.Expression, allowed_tables: set[str], a
 def check_dangerous_functions(statement: exp.Expression) -> None:
     """Verifica que el AST no contenga llamadas a funciones de sistema bloqueadas."""
     for func in statement.find_all(exp.Func):
-        # Anonymous conserva el identificador escrito en SQL; las funciones
-        # tipadas de sqlglot exponen su nombre SQL mediante sql_name().
-        raw_name = func.name if isinstance(func, exp.Anonymous) else func.sql_name()
-        func_name = (raw_name or "").strip('"').lower().rsplit(".", 1)[-1]
+        func_name = _function_name(func)
         blocked = (
             func_name in DANGEROUS_FUNCTIONS
             or func_name.startswith(DANGEROUS_FUNCTION_PREFIXES)
@@ -291,6 +340,8 @@ def validate_ast(
 
         check_table_whitelist(statement, allowed_tables, allowed_schema)
         check_dangerous_functions(statement)
+        if _function_policy() == "allowlist":
+            check_function_allowlist(statement)
         if dialect == "oracle":
             check_oracle_safety(statement)
         check_offset_limit(statement)
