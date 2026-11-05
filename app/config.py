@@ -40,6 +40,8 @@ class Settings:
     db_connect_timeout_seconds: int = int(os.getenv("DB_CONNECT_TIMEOUT_SECONDS", "3"))
     max_schema_distance: float = float(os.getenv("MAX_SCHEMA_DISTANCE", "0.7"))
     warmup_on_startup: bool = os.getenv("WARMUP_ON_STARTUP", "true").strip().lower() not in ("false", "0")
+    # 0 desactiva la comprobación; > 0 indica el intervalo máximo entre chequeos.
+    schema_check_interval_seconds: float = float(os.getenv("SCHEMA_CHECK_INTERVAL_SECONDS", "0"))
 
 
 settings = Settings()
