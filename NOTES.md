@@ -310,6 +310,7 @@ o error evita eso?
 - **Política de invalidación y limitaciones conocidas:**
   - Al ser un cache en memoria del proceso, si se reindexa el esquema con `scripts/index_schema.py` o se modifica la documentación de tablas, las entradas cacheadas quedan desactualizadas (*stale*) hasta que se reinicie el proceso de Uvicorn (o se invoque explícitamente `.cache_clear()`).
   - Esta es una limitación conocida y aceptada para el entorno actual de desarrollo local.
+  - **Actualización (5-nov-2026): salida opt-in.** `SCHEMA_CHECK_INTERVAL_SECONDS` > 0 activa una guardia en `/query` que compara una huella barata de `schema_embeddings` (`count(*)` y `max(id)`: el indexador borra y reinserta, así que `max(id)` crece en cada reindexado) y limpia solo `retrieve_relevant_schema`. Por defecto está apagada porque consultar la base en cada petición cambiaría el recuento de llamadas a `_engine.connect` que asumen las pruebas existentes. Con varios workers cada uno comprueba por su cuenta; no hace falta Redis para esto. `generate_sql` no se limpia: va por (pregunta, contexto) y un contexto nuevo es un fallo de caché.
 
 - **Escalabilidad y próximo paso (por qué in-memory no escala a múltiples workers):**
   - *In-memory alcanza para este estadio*: Uvicorn corre como un único proceso worker en local, compartiendo el espacio de memoria de Python.
@@ -463,6 +464,8 @@ Resultado final: 245 tests en `tests/test_safety_adversarial.py` y 269 en la sui
 
 ### Limitación conocida: la lista negra de funciones
 Una lista negra solo bloquea lo que nombra o cubre por patrón; una función nueva o poco común puede pasar. La alternativa es una **lista blanca de funciones** (agregados, fechas, texto, ventanas, `generate_series`): es más segura, pero rompe SQL legítimo que el LLM invente y obliga a mantener un catálogo. Se eligieron patrones de familia como equilibrio. Un efecto lateral aceptado: las formas sin paréntesis (`current_user`, `session_user`, `current_schema`) se bloquean como columna sin calificar, de modo que una columna de negocio con ese nombre exacto también se rechazaría; ninguna tabla actual la tiene.
+
+**Actualización (5-nov-2026): lista blanca opt-in.** `FUNCTION_POLICY=allowlist` activa `check_function_allowlist`: solo pasan las funciones de `ALLOWED_FUNCTIONS` más las de `ALLOWED_FUNCTIONS_EXTRA`, y la lista negra sigue corriendo primero (un extra no puede reabrir `pg_sleep`). Por defecto sigue la lista negra, sin cambios. Dos cosas que costó descubrir: `sqlglot` renombra las funciones tipadas (`date_trunc` → `timestamp_trunc`, `to_char` → `time_to_str`, `string_agg` → `group_concat`, `now` → `current_timestamp`, `generate_series` en `FROM` → `exploding_generate_series`), así que la lista contiene esos nombres internos; y la lista es mínima a propósito (sin `ln`, `chr`, `exp`): lo que falte se añade con `ALLOWED_FUNCTIONS_EXTRA`. Con el dialecto Oracle se usa el mismo conjunto, y sus funciones propias (`nvl`, `decode`…) hay que declararlas como extra.
 
 ### Defensa en profundidad
 El firewall es una capa, no la única. En producción hay que sumar:

@@ -177,6 +177,9 @@ La aplicación se configura mediante variables de entorno (o archivo `.env`):
 | `ALLOWED_SCHEMA` | `public` | Único esquema permitido para tablas calificadas (`esquema.tabla`); los nombres sin calificar no se ven afectados. No distingue mayúsculas. |
 | `TARGET_DIALECT` | `postgres` | Dialecto SQL del cortafuegos: `postgres` u `oracle` (sin distinguir mayúsculas). Con `oracle` solo se valida el SQL; la ejecución contra Oracle aún no está implementada. Ver [docs/oracle-firewall.md](docs/oracle-firewall.md). |
 | `QUERY_TIMEOUT_SECONDS` | `5` | Timeout de ejecución de la query en Postgres (segundos). |
+| `SCHEMA_CHECK_INTERVAL_SECONDS` | `0` | Opt-in. `0` = apagada. Con `> 0`, `/query` comprueba como máximo una vez por intervalo si se reindexó `schema_embeddings` (`count(*)` + `max(id)`) y, si cambió, limpia la caché de retrieval: las respuestas no quedan viejas hasta reiniciar Uvicorn. Nunca lanza: si la comprobación falla, no hace nada. Cada worker comprueba por su cuenta. |
+| `FUNCTION_POLICY` | `denylist` | `denylist` (por defecto, sin cambios) o `allowlist`. Con `allowlist` el cortafuegos solo acepta las funciones de `ALLOWED_FUNCTIONS` (`app/core/safety.py`) más `ALLOWED_FUNCTIONS_EXTRA`; la lista negra sigue corriendo primero. Cualquier otro valor rechaza todas las consultas (fail-closed). |
+| `ALLOWED_FUNCTIONS_EXTRA` | _(vacía)_ | Nombres de funciones, separados por comas, que se suman a la lista blanca con `FUNCTION_POLICY=allowlist` (p. ej. las propias de Oracle). Nunca reabre una función que la lista negra bloquea. |
 
 ---
 
