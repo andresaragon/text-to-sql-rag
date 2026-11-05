@@ -128,8 +128,9 @@ def test_las_construcciones_estructurales_ya_pasaban_por_defecto(sql):
 
 @pytest.mark.parametrize("function", ["pg_sleep", "pg_read_file", "dblink", "set_config", "lo_import", "version", "current_user"])
 def test_allowlist_sigue_aplicando_la_lista_negra(allowlist, function):
+    # Sin argumentos: en sqlglot 30 `version` es una función de cero argumentos y `version(1)` ni siquiera parsea.
     with pytest.raises(DangerousFunctionError):
-        validate_ast(f"SELECT {function}(1) FROM invoices")
+        validate_ast(f"SELECT {function}() FROM invoices")
 
 
 def test_allowlist_tambien_aplica_en_validate_and_prepare(allowlist):
@@ -159,7 +160,7 @@ def test_extra_no_puede_reabrir_una_funcion_peligrosa(allowlist, monkeypatch):
     monkeypatch.setenv("ALLOWED_FUNCTIONS_EXTRA", "pg_sleep,dblink,version")
     for funcion in ("pg_sleep", "dblink", "version"):
         with pytest.raises(DangerousFunctionError):
-            validate_ast(f"SELECT {funcion}(1) FROM invoices")
+            validate_ast(f"SELECT {funcion}() FROM invoices")
 
 
 def test_extra_sin_la_politica_allowlist_no_hace_nada(monkeypatch):
