@@ -22,6 +22,8 @@ corrección semántica de si un filtro literal responde a la pregunta de negocio
 
 
 
+import os
+
 import sqlglot
 from sqlglot import exp
 
@@ -86,7 +88,7 @@ ALLOWED_FUNCTIONS: frozenset[str] = frozenset({
     "floor", "round", "power", "sqrt", "mod", "sign", "trunc", "lower", "upper",
     "initcap", "trim", "ltrim", "rtrim", "length", "substring", "substr", "left", "right",
     "replace", "concat", "concat_ws", "split_part", "regexp_replace", "md5", "array",
-    "explode", "unnest", "generate_series", "jsonb_build_object", "exists", "any", "all",
+    "explode", "unnest", "generate_series", "exploding_generate_series", "jsonb_build_object", "exists", "any", "all",
 })
 
 ORACLE_DANGEROUS_FUNCTIONS = {
@@ -121,15 +123,15 @@ class DangerousFunctionError(UnsafeQueryError):
 
 
 def _function_name(func: exp.Func) -> str:
-    """Devuelve el nombre normalizado usado por las políticas de funciones."""
+    """Nombre normalizado (minúsculas, sin comillas ni esquema) que usan las dos políticas de funciones."""
+    # Anonymous conserva el identificador escrito en SQL; las funciones
+    # tipadas de sqlglot exponen su nombre SQL mediante sql_name().
     raw_name = func.name if isinstance(func, exp.Anonymous) else func.sql_name()
     return (raw_name or "").strip('"').lower().rsplit(".", 1)[-1]
 
 
 def _function_policy() -> str:
     """Lee y valida la política de funciones configurada para esta llamada."""
-    import os
-
     policy = os.getenv("FUNCTION_POLICY", "").strip().lower() or "denylist"
     if policy not in {"denylist", "allowlist"}:
         raise ValueError(f"Política de funciones no soportada: {policy!r}")
@@ -138,8 +140,6 @@ def _function_policy() -> str:
 
 def _allowed_extra_functions() -> frozenset[str]:
     """Lee funciones adicionales permitidas, normalizadas desde el entorno."""
-    import os
-
     return frozenset(
         name.strip().lower()
         for name in os.getenv("ALLOWED_FUNCTIONS_EXTRA", "").split(",")
