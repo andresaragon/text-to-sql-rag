@@ -35,7 +35,7 @@ from app.core.db import (
     QueryTimeoutError,
     execute_select,
 )
-from app.core.retrieval import retrieve_relevant_schema
+from app.core.retrieval import invalidate_if_reindexed, retrieve_relevant_schema
 from app.core.safety import UnsafeQueryError, validate_and_prepare
 from app.core.sql_generator import generate_sql
 
@@ -70,6 +70,7 @@ class QueryResponse(BaseModel):
 
 @router.post("/query", response_model=QueryResponse)
 def query(request: QuestionRequest, response: Response) -> QueryResponse:
+    invalidate_if_reindexed()
     t0 = time.perf_counter()
     try:
         schema = retrieve_relevant_schema(request.question)
