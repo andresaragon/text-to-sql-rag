@@ -39,6 +39,10 @@ ESTRUCTURALES = [
     "WITH t AS (SELECT customer_id, sum(amount) AS total FROM invoices GROUP BY customer_id) SELECT * FROM t",
     "SELECT id FROM invoices UNION SELECT id FROM payments",
     "SELECT customer_id, sum(amount) AS total FROM invoices GROUP BY customer_id HAVING sum(amount) > 100 ORDER BY total DESC",
+    # generate_series en FROM (series de fechas de los reportes): sqlglot la nombra «exploding_generate_series».
+    "SELECT * FROM generate_series(1, 3)",
+    "SELECT d::date FROM generate_series('2024-01-01'::date, '2024-03-01'::date, interval '1 month') AS d",
+    "SELECT i.id, g FROM invoices i CROSS JOIN generate_series(1, 3) AS g",
 ]
 
 DESCONOCIDAS = [
