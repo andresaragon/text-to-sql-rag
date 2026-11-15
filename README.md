@@ -268,8 +268,8 @@ The application is configured using environment variables (or a `.env` file):
 | `EMBEDDING_MODEL` | `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` | SentenceTransformer model used for embeddings. |
 | `MAX_ROWS_RETURNED` | `100` | Maximum rows allowed in SELECT queries (clamped by AST safety guardrails). |
 | `ALLOWED_SCHEMA` | `public` | Only schema allowed for schema-qualified table names (`schema.table`); unqualified names are not affected. Case-insensitive. |
-| `TARGET_DIALECT` | `postgres` | SQL dialect used by the firewall: `postgres` or `oracle` (case-insensitive). With `oracle` only SQL is validated; executing queries against Oracle (driver, timeouts) is not implemented yet. See [docs/oracle-firewall.md](docs/oracle-firewall.md). |
-| `QUERY_TIMEOUT_SECONDS` | `5` | Query execution timeout in seconds. |
+| `TARGET_DIALECT` | `postgres` | SQL dialect used by the firewall and execution engine: `postgres` or `oracle` (case-insensitive). When set to `oracle`, queries are validated with Oracle-specific AST rules and executed in read-only sessions with `call_timeout` against `TARGET_DATABASE_URL`. See [docs/oracle-firewall.md](docs/oracle-firewall.md). |
+| `QUERY_TIMEOUT_SECONDS` | `5` | Query execution timeout in seconds (enforced via `statement_timeout` on PostgreSQL and `call_timeout` on Oracle). |
 | `SCHEMA_CHECK_INTERVAL_SECONDS` | `0` | Opt-in. `0` = off. When `> 0`, `/query` checks at most once per interval whether `schema_embeddings` was reindexed (`count(*)` + `max(id)`) and, if so, clears the retrieval cache, so answers do not go stale until Uvicorn restarts. Never raises: if the check fails it does nothing. Each worker checks on its own. |
 | `FUNCTION_POLICY` | `denylist` | `denylist` (default, unchanged) or `allowlist`. With `allowlist` the firewall only accepts the functions in `ALLOWED_FUNCTIONS` (`app/core/safety.py`) plus `ALLOWED_FUNCTIONS_EXTRA`; the denylist still runs first. Any other value rejects every query (fail-closed). |
 | `ALLOWED_FUNCTIONS_EXTRA` | _(empty)_ | Comma-separated function names added to the allowlist when `FUNCTION_POLICY=allowlist` (e.g. Oracle-specific ones). It can never reopen a function the denylist blocks. |
@@ -304,7 +304,7 @@ curl -X POST "http://localhost:8000/query" \
 
 ## 🔬 How it was tested
 
-- **Unit suite:** 413 tests that need no external services (no Postgres, no Ollama). They run in CI on pushes to `main` and on every pull request.
+- **Automated suite:** 1,085 tests that need no external services (no Postgres, no Ollama). They run in CI on pushes to `main` and on every pull request.
 - **Adversarial firewall suite:** 245 adversarial tests against the `sqlglot` AST guardrails.
 - **Benchmark with real infrastructure:** first run against real Postgres + pgvector and Ollama (`sqlcoder`, RTX 4060). Full report: [`docs/benchmarks/2026-10-15.md`](docs/benchmarks/2026-10-15.md).
 - **A/B benchmark, Postgres vs Oracle vs transpiled SQL:** 30 questions, two local models, identical data in both databases; the model matters far more than the dialect, and transpiling costs date questions. Report: [`docs/benchmarks/2026-10-23-ab.md`](docs/benchmarks/2026-10-23-ab.md).
