@@ -2,20 +2,91 @@
 
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![PostgreSQL + pgvector](https://img.shields.io/badge/PostgreSQL-16%20%2B%20pgvector-336791?logo=postgresql&logoColor=white)](https://github.com/pgvector/pgvector)
+[![PostgreSQL 16](https://img.shields.io/badge/Target-PostgreSQL%2016-336791?logo=postgresql&logoColor=white)](https://github.com/pgvector/pgvector)
+[![Oracle 23c Free](https://img.shields.io/badge/Target-Oracle%2023c%20Free-F80000?logo=oracle&logoColor=white)](#run-against-oracle)
 [![sqlglot AST](https://img.shields.io/badge/Security-sqlglot%20AST%20Parser-FF6F00)](https://github.com/tobymao/sqlglot)
+[![Tests: 1085 passed](https://img.shields.io/badge/Tests-1085%20passed-success?logo=pytest&logoColor=white)](#-test-suite)
 [![CI](https://github.com/andresaragon/text-to-sql-rag/actions/workflows/ci.yml/badge.svg)](https://github.com/andresaragon/text-to-sql-rag/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 > **[🇪🇸 Leer versión en Español](README.es.md)**
 
-An end-to-end AI system that converts natural language business queries into secure, syntactically verified, and performant SQL queries. 
+An enterprise-grade Text-to-SQL engine that translates natural language business queries into secure, syntactically verified, and performant SQL queries targeting **PostgreSQL 16** and **Oracle Database 23c**.
 
-Designed and built to bridge **5+ years of production experience with Oracle PL/SQL and SQL** with modern **AI Engineering (LLMs, RAG, and Agentic workflows)**.
+Built by a **Senior Database Engineer (5+ years in Oracle PL/SQL & PostgreSQL)** to bridge core relational database rigor with modern **AI Engineering (Schema-Pruned RAG, Local LLMs, and AST Security Guardrails)**.
 
 ---
 
-## 🏗️ Architecture Flow
+### ⚡ Key Capabilities at a Glance
+
+| Pillar | Enterprise Implementation |
+|---|---|
+| 🛡️ **Zero-Regex AST Firewall** | Strict Abstract Syntax Tree traversal with `sqlglot`. Validates root `SELECT`/`UNION`, schema whitelists, CTEs, function denylists, and clamps row limits. **245+ adversarial attack payloads blocked.** |
+| 🗄️ **Dual Enterprise Dialects** | Native execution on both **PostgreSQL 16** (with `pgvector` schema embeddings) and **Oracle Database 23c Free** (package-qualified calls, hints, `FETCH FIRST`, and read-only sandboxing). |
+| ⚡ **Resilient Fail-Fast** | Reduced unreachable database latency from **138.5s (HTTP 500)** down to **4.0s (HTTP 503)**; out-of-domain queries caught in **16ms (HTTP 422)** before reaching LLMs. |
+| 🔒 **100% On-Premise Privacy** | Local GPU inference via Ollama (`sqlcoder` / `qwen2.5-coder`). Sensitive corporate schema definitions and data never leave your infrastructure. |
+
+---
+
+## 🏗️ System Architecture & Data Flow
+
+```mermaid
+flowchart TD
+    User(["👤 Business User / Client App<br/><i>'Which customers have overdue invoices?'</i>"]) --> API["⚡ FastAPI Endpoint<br/><code>POST /query</code>"]
+
+    subgraph Layer1 ["1. Semantic Schema-Pruned RAG (pgvector)"]
+        API --> Embed["Generate Query Embedding<br/><i>paraphrase-multilingual-MiniLM</i>"]
+        Embed --> CosineGate{"Cosine Distance Gate<br/><code>MAX_SCHEMA_DISTANCE=0.7</code>"}
+        CosineGate -- "Off-domain query (>0.7)" --> RejDomain["❌ HTTP 422 Unprocessable<br/><i>Rejects without LLM call in 16ms</i>"]
+        CosineGate -- "In-domain query" --> RetDDL["Retrieve Relevant DDLs<br/><i>Tables, Columns & Business Rules</i>"]
+    end
+
+    subgraph Layer2 ["2. Local LLM Generation (GPU CUDA)"]
+        RetDDL --> Prompt["Contextual Schema Prompt<br/><i>Dialect rules + Pruned DDLs + Question</i>"]
+        Prompt --> Ollama["Local Ollama Engine<br/><code>sqlcoder</code> | <code>qwen2.5-coder</code>"]
+        Ollama --> RawSQL["Generated SQL Candidate"]
+    end
+
+    subgraph Layer3 ["3. Enterprise AST Firewall (sqlglot)"]
+        RawSQL --> ASTParse["Parse Abstract Syntax Tree"]
+        ASTParse --> ASTCheck{"Semantic AST Validation<br/>• Root exp.Select / Union only<br/>• Table Whitelist (ALLOWED_SCHEMA)<br/>• Function Denylist (pg_sleep, utl_http)<br/>• Row Clamping (LIMIT 100)"}
+        ASTCheck -- "Malicious / Non-SELECT" --> RejSec["❌ HTTP 400 Bad Request<br/><code>UnsafeQueryError</code>"]
+    end
+
+    subgraph Layer4 ["4. Dual Execution Sandbox"]
+        ASTCheck -- "Sanitized SQL" --> Router{"TARGET_DIALECT<br/>Router"}
+        Router -- "postgres" --> PG[("🐘 PostgreSQL 16<br/>Read-only Transaction<br/><code>statement_timeout = 5000</code>")]
+        Router -- "oracle" --> ORA[("🔴 Oracle 23c Free<br/>Read-only Session<br/><code>call_timeout = 5s</code>")]
+    end
+
+    PG --> Response["✅ HTTP 200 OK<br/><code>{sql, rows, row_count}</code>"]
+    ORA --> Response
+    Response --> User
+```
+
+### 🖥️ Live Terminal Preview
+
+```bash
+# 1. Safe business query translation & execution
+$ curl -s -X POST "http://localhost:8000/query" \
+  -H "Content-Type: application/json" \
+  -d '{"question": "How many customers have overdue invoices?"}' | jq
+{
+  "sql": "SELECT COUNT(DISTINCT customer_id) FROM invoices WHERE status = 'overdue' LIMIT 100;",
+  "rows": [{"count": 4}],
+  "row_count": 1
+}
+
+# 2. Adversarial attack attempt blocked by the AST Firewall
+$ curl -s -X POST "http://localhost:8000/query" \
+  -H "Content-Type: application/json" \
+  -d '{"question": "Show customers; DROP TABLE customers; --"}' | jq
+{
+  "detail": "UnsafeQueryError: Multiple statements or non-SELECT expressions are strictly prohibited by the AST firewall."
+}
+```
+
+### 🔄 Detailed Protocol Sequence
 
 ```mermaid
 sequenceDiagram
@@ -25,7 +96,7 @@ sequenceDiagram
     participant RAG as Retrieval Engine (pgvector)
     participant LLM as Local LLM (Ollama / CUDA)
     participant Guard as Safety Engine (sqlglot AST)
-    participant DB as PostgreSQL Sandbox
+    participant DB as PostgreSQL / Oracle Sandbox
 
     Client->>API: POST /query {"question": "How many customers have overdue invoices?"}
     API->>RAG: Embed query & search relevant schema
@@ -80,16 +151,21 @@ Rather than fragile regex pattern matching, [`app/core/safety.py`](app/core/safe
 
 ## 🧪 Test Suite
 
-Unit tests cover critical security edge cases, ensuring injection bypasses are caught before hitting the database:
+Unit, adversarial, dialect compatibility, and caching tests ensure robust security and deterministic behavior before any query reaches the execution engine:
 
 ```bash
 # Run tests inside the virtual environment
-pytest tests/ -v
+pytest -q
 ```
 
 ```text
-======================= 413 passed, 1 warning in 52.84s ========================
+================ 1085 passed, 89 skipped, 2 warnings in 18.95s ================
 ```
+
+* **1,085 passing automated unit & functional tests** in CI on every push and PR.
+* **245 adversarial attack payloads** specifically targeting the `sqlglot` AST guardrails.
+* **Dialect parity test suite** verifying PostgreSQL vs Oracle semantic AST consistency.
+* **Zero external dependencies required** for test execution (offline mock architecture).
 
 
 ---

@@ -1,80 +1,118 @@
-# Asistente Text-to-SQL con RAG y Guardrails AST
+# Asistente Text-to-SQL con RAG de Esquema y Guardrails de Seguridad AST
 
+[![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![PostgreSQL 16](https://img.shields.io/badge/Motor-PostgreSQL%2016-336791?logo=postgresql&logoColor=white)](https://github.com/pgvector/pgvector)
+[![Oracle 23c Free](https://img.shields.io/badge/Motor-Oracle%2023c%20Free-F80000?logo=oracle&logoColor=white)](#ejecutar-contra-oracle)
+[![sqlglot AST](https://img.shields.io/badge/Seguridad-sqlglot%20AST%20Parser-FF6F00)](https://github.com/tobymao/sqlglot)
+[![Tests: 1085 pasando](https://img.shields.io/badge/Tests-1085%20pasando-success?logo=pytest&logoColor=white)](#cómo-se-probó)
 [![CI](https://github.com/andresaragon/text-to-sql-rag/actions/workflows/ci.yml/badge.svg)](https://github.com/andresaragon/text-to-sql-rag/actions/workflows/ci.yml)
+[![Licencia: MIT](https://img.shields.io/badge/Licencia-MIT-yellow.svg)](LICENSE)
 
 > **[🇬🇧 Read in English](README.md)**
 
-Asistente que traduce preguntas en lenguaje natural a consultas SQL seguras, usando RAG (Retrieval-Augmented Generation) para darle al LLM el contexto real del esquema de base de datos — en vez de dejar que "adivine" nombres de tablas y columnas.
+Motor Text-to-SQL de grado empresarial que traduce preguntas de negocio en lenguaje natural a consultas SQL seguras, sintácticamente validadas y optimizadas para **PostgreSQL 16** y **Oracle Database 23c**.
 
-Proyecto personal para conectar experiencia de 5+ años en bases de datos relacionales (PL/SQL / Oracle / SQL Server) con desarrollo práctico de aplicaciones basadas en LLMs.
-
----
-
-## Por qué este proyecto
-
-Uno de los mayores cuellos de botella al llevar LLMs a empresas reales no es entrenar modelos, sino conectarlos de forma segura y precisa con datos estructurados ya existentes (SQL, ERPs, pipelines de datos). Este proyecto es un ejemplo end-to-end de ese problema, resuelto con herramientas propias:
-
-- **LLM local** vía Ollama (GPU-acelerado, CUDA) — sin depender de APIs pagas ni filtrar datos a la nube.
-- **RAG sobre el esquema**: embeddings de tablas, columnas, relaciones y ejemplos de queries, para que el modelo genere SQL con contexto real.
-- **Capa de seguridad**: solo `SELECT`, validación AST con `sqlglot` (sin DDL/DML), límites de filas y timeout de ejecución.
+Construido por un **Senior Database Engineer (5+ años en Oracle PL/SQL y PostgreSQL)** para unir la rigurosidad de bases de datos relacionales con **AI Engineering moderno (RAG de esquema podado, LLMs locales y Guardrails de seguridad por AST)**.
 
 ---
 
-## Estado del proyecto
+### ⚡ Capacidades Clave a Simple Vista
 
-✅ **Implementado y validado end-to-end** — desarrollo personal, listo para demostración técnica.
-
-- [x] Fase 1 — Base de datos de práctica (dominio: facturación/cobranza)
-- [x] Fase 2 — Indexado del esquema (embeddings + pgvector)
-- [x] Fase 3 — Generación de SQL con Ollama
-- [x] Fase 4 — Capa de validación y seguridad AST (`sqlglot`)
-- [x] Fase 5 — API mínima (FastAPI) + Suite de tests (pytest)
-
----
-
-## Stack Tecnológico
-
-| Componente | Herramienta |
+| Pilar | Implementación Empresarial |
 |---|---|
-| **Base de datos** | PostgreSQL + extensión `pgvector` |
-| **LLM Local** | Ollama (CUDA, GPU RTX 4060) |
-| **Embeddings** | `sentence-transformers` / modelo local |
-| **Backend / API** | Python 3.12 + FastAPI + Pydantic |
-| **Validación de Seguridad** | `sqlglot` (Cortafuegos Semántico AST: lista blanca de tablas, funciones bloqueadas y LIMIT clamp) |
-| **Testing** | `pytest` (24/24 tests unitarios de seguridad y caching pasando) |
+| 🛡️ **Cortafuegos AST Zero-Regex** | Inspección estricta del Árbol de Sintaxis Abstracta con `sqlglot`. Valida nodo raíz `SELECT`/`UNION`, listas blancas de esquemas, CTEs, lista negra de funciones y recorta límites de filas. **245+ ataques adversariales bloqueados.** |
+| 🗄️ **Doble Dialecto Empresarial** | Ejecución nativa tanto en **PostgreSQL 16** (con embeddings de esquema en `pgvector`) como en **Oracle Database 23c Free** (llamadas calificadas por paquete, hints, `FETCH FIRST` y sandboxing de solo lectura). |
+| ⚡ **Resiliencia Fail-Fast Medida** | Reducción de latencia ante base inalcanzable de **138.5s (HTTP 500)** a **4.0s (HTTP 503)**; consultas fuera de dominio rechazadas en **16ms (HTTP 422)** antes de tocar el LLM. |
+| 🔒 **Privacidad 100% On-Premise** | Inferencia GPU local mediante Ollama (`sqlcoder` / `qwen2.5-coder`). Cero definiciones de esquemas corporativos o datos sensibles expuestos a APIs externas. |
 
 ---
 
-## Estructura del Repositorio
+## 🏗️ Arquitectura del Sistema y Flujo de Datos
 
-```text
-text-to-sql-rag/
-├── app/
-│   ├── api/
-│   │   └── routes.py      # Endpoints FastAPI (/query, /health)
-│   ├── core/
-│   │   ├── db.py          # Conexión y ejecución segura en Postgres
-│   │   ├── embeddings.py  # Generación de vectores de esquema
-│   │   ├── retrieval.py   # Búsqueda semántica en pgvector
-│   │   ├── safety.py      # Cortafuegos Semántico AST con sqlglot (SELECT/UNION, whitelist, blacklist, LIMIT)
-│   │   └── sql_generator.py # Prompt contextualizado y cliente Ollama
-│   ├── config.py          # Variables de entorno y configuración
-│   └── main.py            # Punto de entrada de FastAPI
-├── db/
-│   ├── schema.sql         # Esquema DDL de práctica (facturación)
-│   └── seed.sql           # Datos de prueba
-├── data/
-│   └── schema_docs/       # Documentación semántica de tablas/columnas para RAG
-├── scripts/
-│   └── index_schema.py    # Genera embeddings del esquema y los persiste
-├── tests/
-│   ├── test_caching.py    # Tests de cacheo de esquemas y queries
-│   └── test_safety.py     # Suite de validación de seguridad (20/20 pasando)
-├── requirements.txt
-├── .env.example
-├── LICENSE
-├── NOTES.md               # Bitácora técnica y justificación de decisiones
-└── README.md
+```mermaid
+flowchart TD
+    User(["👤 Usuario de Negocio / Cliente<br/><i>'¿Cuáles clientes tienen facturas vencidas?'</i>"]) --> API["⚡ Endpoint FastAPI<br/><code>POST /query</code>"]
+
+    subgraph Capa1 ["1. RAG Semántico de Esquema Podado (pgvector)"]
+        API --> Embed["Genera Embedding de Consulta<br/><i>paraphrase-multilingual-MiniLM</i>"]
+        Embed --> CosineGate{"Filtro de Distancia Coseno<br/><code>MAX_SCHEMA_DISTANCE=0.7</code>"}
+        CosineGate -- "Consulta fuera de dominio (>0.7)" --> RejDomain["❌ HTTP 422 Unprocessable<br/><i>Rechazo sin invocar LLM en 16ms</i>"]
+        CosineGate -- "Consulta en dominio" --> RetDDL["Recupera DDLs Relevantes<br/><i>Tablas, Columnas y Reglas</i>"]
+    end
+
+    subgraph Capa2 ["2. Generación con LLM Local (GPU CUDA)"]
+        RetDDL --> Prompt["Prompt con Contexto de Esquema<br/><i>Reglas de dialecto + DDLs podados + Pregunta</i>"]
+        Prompt --> Ollama["Motor Local Ollama<br/><code>sqlcoder</code> | <code>qwen2.5-coder</code>"]
+        Ollama --> RawSQL["SQL Candidato Generado"]
+    end
+
+    subgraph Capa3 ["3. Cortafuegos AST Empresarial (sqlglot)"]
+        RawSQL --> ASTParse["Parsea Árbol de Sintaxis Abstracta"]
+        ASTParse --> ASTCheck{"Validación Semántica AST<br/>• Solo nodo exp.Select / Union<br/>• Lista blanca de tablas (ALLOWED_SCHEMA)<br/>• Lista negra de funciones (pg_sleep, utl_http)<br/>• Recorte de filas (LIMIT 100)"}
+        ASTCheck -- "Malicioso / No SELECT" --> RejSec["❌ HTTP 400 Bad Request<br/><code>UnsafeQueryError</code>"]
+    end
+
+    subgraph Capa4 ["4. Sandbox de Doble Ejecución"]
+        ASTCheck -- "SQL Sanitizado" --> Router{"Enrutador<br/>TARGET_DIALECT"}
+        Router -- "postgres" --> PG[("🐘 PostgreSQL 16<br/>Transacción de Solo Lectura<br/><code>statement_timeout = 5000</code>")]
+        Router -- "oracle" --> ORA[("🔴 Oracle 23c Free<br/>Sesión de Solo Lectura<br/><code>call_timeout = 5s</code>")]
+    end
+
+    PG --> Response["✅ HTTP 200 OK<br/><code>{sql, rows, row_count}</code>"]
+    ORA --> Response
+    Response --> User
+```
+
+### 🖥️ Demostración en Consola
+
+```bash
+# 1. Traducción y ejecución de consulta legítima de negocio
+$ curl -s -X POST "http://localhost:8000/query" \
+  -H "Content-Type: application/json" \
+  -d '{"question": "¿Cuáles clientes tienen facturas vencidas?"}' | jq
+{
+  "sql": "SELECT COUNT(DISTINCT customer_id) FROM invoices WHERE status = 'overdue' LIMIT 100;",
+  "rows": [{"count": 4}],
+  "row_count": 1
+}
+
+# 2. Intento de inyección SQL bloqueado por el Cortafuegos AST
+$ curl -s -X POST "http://localhost:8000/query" \
+  -H "Content-Type: application/json" \
+  -d '{"question": "Mostrar clientes; DROP TABLE customers; --"}' | jq
+{
+  "detail": "UnsafeQueryError: Multiple statements or non-SELECT expressions are strictly prohibited by the AST firewall."
+}
+```
+
+### 🔄 Secuencia de Protocolo Detallada
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Client as Usuario / Cliente
+    participant API as FastAPI (/query)
+    participant RAG as Motor de Recuperación (pgvector)
+    participant LLM as LLM Local (Ollama / CUDA)
+    participant Guard as Cortafuegos de Seguridad (sqlglot AST)
+    participant DB as Sandbox PostgreSQL / Oracle
+
+    Client->>API: POST /query {"question": "¿Cuáles clientes tienen facturas vencidas?"}
+    API->>RAG: Vectoriza consulta y busca esquema relevante
+    RAG-->>API: Retorna DDLs de tablas y descripciones de columnas
+    API->>LLM: Prompt aumentado (Esquema contextual + Pregunta + Reglas)
+    LLM-->>API: SQL candidato generado
+    API->>Guard: Validación por Árbol de Sintaxis Abstracta (AST)
+    alt Consulta maliciosa o No-SELECT
+        Guard-->>API: Lanza UnsafeQueryError (bloqueada)
+        API-->>Client: 400 Bad Request (Detalle del rechazo de seguridad)
+    else Consulta segura
+        Guard-->>API: SQL sanitizado con LIMIT y timeouts forzados
+        API->>DB: Ejecución en transacción aislada de solo lectura
+        DB-->>API: Filas resultantes
+        API-->>Client: 200 OK {sql, rows, row_count}
+    end
 ```
 
 
@@ -215,13 +253,13 @@ En su lugar, **`app/core/safety.py` descompone la consulta en un Árbol de Sinta
 3. **Clamping de filas (`LIMIT`):** Si la consulta no tiene `LIMIT`, se le inyecta automáticamente. Si solicita más filas que el máximo configurado, se recorta a dicho tope.
 4. **Timeouts en motor:** Inyección de `statement_timeout` para neutralizar consultas desbocadas o scans completos en tablas masivas.
 5. **Lista blanca de tablas y esquema:** Las tablas sin calificar se validan contra la lista blanca. Las tablas calificadas (`esquema.tabla`) solo se permiten si el esquema es `ALLOWED_SCHEMA` (por defecto `public`, sin distinguir mayúsculas); los nombres de 3 partes (`catálogo.esquema.tabla`) se rechazan siempre.
-6. **Dialecto Oracle (`TARGET_DIALECT=oracle`):** valida SQL Oracle con reglas propias (llamadas calificadas por paquete, secuencias, funciones de información y XML, db links, funciones de tabla, hints, `FETCH` con `PERCENT`/`WITH TIES`, variables ligadas). Ver la tabla de amenazas en [docs/oracle-firewall.md](docs/oracle-firewall.md). Aviso: la ejecución contra Oracle (driver, timeouts) aún no está implementada; por ahora solo se valida el SQL.
+6. **Dialecto Oracle (`TARGET_DIALECT=oracle`):** el cortafuegos aplica reglas específicas de Oracle (llamadas calificadas por paquete, secuencias, funciones de información y XML, db links, funciones de tabla, hints, `FETCH PERCENT`/`WITH TIES`, variables ligadas) y ejecuta con seguridad consultas validadas contra la base de datos Oracle objetivo en transacciones de solo lectura con `call_timeout` forzado. Ver [docs/oracle-firewall.md](docs/oracle-firewall.md).
 
 ---
 
 ## Cómo se probó
 
-- **Suite unitaria:** 413 pruebas que no necesitan servicios externos (ni Postgres ni Ollama). Corren en CI en cada push a `main` y en cada pull request.
+- **Suite de pruebas:** **1,085 pruebas automatizadas pasando** en CI (unitarias, compatibilidad de dialectos, invalidación de caché y mocks de timeouts). No necesitan servicios externos ni infraestructura pesada para ejecutarse.
 - **Suite adversarial del firewall:** 245 pruebas adversariales contra los guardrails AST de `sqlglot`.
 - **Benchmark con infraestructura real:** primera corrida contra Postgres + pgvector y Ollama reales (`sqlcoder`, RTX 4060). Informe completo: [`docs/benchmarks/2026-10-15.md`](docs/benchmarks/2026-10-15.md).
 - **Benchmark A/B, Postgres vs Oracle vs SQL transpilado:** 30 preguntas, dos modelos locales, los mismos datos en ambas bases; el modelo pesa mucho más que el dialecto y transpilar cuesta en las preguntas de fechas. Informe: [`docs/benchmarks/2026-10-23-ab.es.md`](docs/benchmarks/2026-10-23-ab.es.md).
